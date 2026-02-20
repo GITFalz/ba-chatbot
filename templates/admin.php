@@ -304,7 +304,7 @@ function ai_chatbot_admin_panel() {
                                 <span>&#8594;</span> <!-- → arrow -->
                             </div>
                             <div class="ba-chatbot-icon-preview" id="ba_bot_icon_preview" style="display: none;">
-                                <img id="ba-bot-icon-preview-img" src="<?php echo esc_url($bot_icon_url); ?>" alt="Bot Icon">
+                                <img id="ba-bot-icon-preview-img" src="" alt="Bot Icon">
                             </div>  
                         </div>
                     </div>

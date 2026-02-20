@@ -4,7 +4,8 @@
   "type": "wordpress-plugin",
   "require": {
     "smalot/pdfparser": "^2.0",
-    "phpoffice/phpword": "^1.4.0"
+    "phpoffice/phpword": "^1.4.0",
+    "yahnis-elsts/plugin-update-checker": "^5.6"
   },
   "autoload": {
     "psr-4": {
