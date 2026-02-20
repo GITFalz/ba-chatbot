@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BA Chatbot
  * Description: Chatbot voor je website, BuroAmstelveen.
- * Version:     1.5.1
+ * Version:     1.5.2
  * Author:      Bjornar Schinkel
  */
 
