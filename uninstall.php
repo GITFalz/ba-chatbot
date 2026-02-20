@@ -15,4 +15,13 @@ delete_option('ba_bot_chat_color');
 delete_option('ba_bot_open');
 delete_option('ba_bot_speech');
 
+$upload_dir_info = wp_upload_dir();
+$upload_dir = $upload_dir_info['basedir'] . '/ba-chatbot/';
+
+$old_files = glob($upload_dir . 'profile-picture.*');
+foreach ($old_files as $file) {
+    @unlink($file);
+}
+
 delete_option('ba_bot_icon_ext');
+delete_option('ba_bot_icon_url');

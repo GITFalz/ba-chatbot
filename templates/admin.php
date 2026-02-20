@@ -108,19 +108,7 @@ function ai_chatbot_admin_panel() {
     $speech            = get_option('ba_bot_speech');
     $widget_color      = get_option('ba_bot_chat_color');
 
-    $base_path = plugin_dir_path(__FILE__) . '../assets/img/profile-picture';
-    $base_url  = plugin_dir_url(__FILE__) . '../assets/img/profile-picture';
-
-    $extensions = ['png', 'jpg', 'jpeg', 'webp', 'gif'];
-
-    $pfp_img_url = '';
-
-    foreach ($extensions as $ext) {
-        if (file_exists($base_path . '.' . $ext)) {
-            $pfp_img_url = $base_url . '.' . $ext;
-            break;
-        }
-    }
+    $pfp_img_url = get_option('ba_bot_icon_url');
 
     ?>
 <div id="ba-chatbot-admin-panel" class="ba-chatbot-admin-wrap">

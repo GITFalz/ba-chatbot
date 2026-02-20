@@ -36,16 +36,10 @@ function hex_to_rgb($hex) {
 
 // Shortcode for frontend chatbot widget (Dutch, orange style, polished icons)
 add_shortcode('Chatbot', function() {
-    $pfp_img_url = '';
-    $ext = get_option('ba_bot_icon_ext');
-    if ($ext)
-    {
-        $pfp_img_url = AI_CHATBOT_URL . '/assets/img/profile-picture' . '.' . $ext;
-    }
-
-    $widget_color      = get_option('ba_bot_chat_color');
-    $open_widget      = get_option('ba_bot_open');
-    $chatbot_name      = get_option('ba_bot_name');
+    $pfp_img_url        = get_option('ba_bot_icon_url');
+    $widget_color       = get_option('ba_bot_chat_color');
+    $open_widget        = get_option('ba_bot_open');
+    $chatbot_name       = get_option('ba_bot_name');
     $intro_message      = get_option('ba_bot_intro_message');
 
     ob_start();

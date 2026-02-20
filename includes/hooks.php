@@ -315,8 +315,8 @@ function ai_chatbot_save_settings_handler()
             $error_msg = $response->get_error_message();
 
             if ($changed_qdrant_url) {
-                $qdrant_url_change_message = "Error connecting to Qdrant: $error_msg";
-                $qdrant_url_change_success = false;
+                $url_change_message = "Error connecting to Qdrant: $error_msg";
+                $url_change_success = false;
             }
 
             if ($changed_qdrant_api) {
@@ -328,8 +328,8 @@ function ai_chatbot_save_settings_handler()
 
             if ($status === 200) {
                 if ($changed_qdrant_url) {
-                    $qdrant_url_change_message = "URL reachable!";
-                    $qdrant_url_change_success = true;
+                    $url_change_message = "URL reachable!";
+                    $url_change_success = true;
                     update_option('ba_qdrant_url', ba_encrypt($new_url));
                 }
 
@@ -340,8 +340,8 @@ function ai_chatbot_save_settings_handler()
                 }
             } else {
                 if ($changed_qdrant_url) {
-                    $qdrant_url_change_message = "URL responded, but request failed (HTTP $status)";
-                    $qdrant_url_change_success = false;
+                    $url_change_message = "URL responded, but request failed (HTTP $status)";
+                    $url_change_success = false;
                 }
 
                 if ($changed_qdrant_api) {
@@ -352,8 +352,8 @@ function ai_chatbot_save_settings_handler()
         }
     } else {
         if ($changed_qdrant_url && !$qdrant_api) {
-            $qdrant_url_change_message = "Cannot test URL: API key not set.";
-            $qdrant_url_change_success = false;
+            $url_change_message = "Cannot test URL: API key not set.";
+            $url_change_success = false;
         }
 
         if ($changed_qdrant_api && !$qdrant_url) {
@@ -377,7 +377,6 @@ function ai_chatbot_save_settings_handler()
             $gpt_api_change_success = false;
         } else {
             $status = wp_remote_retrieve_response_code($response);
-            $body = wp_remote_retrieve_body($response);
 
             if ($status === 200) {
                 $gpt_api_change_message = "API key works! Successfully connected to OpenAI.";
@@ -390,52 +389,11 @@ function ai_chatbot_save_settings_handler()
         }
     }
 
-    if (!empty($_FILES['bot_icon'])) 
-    {
-        $file_tmp  = $_FILES['bot_icon']['tmp_name'];
-        $file_type = mime_content_type($file_tmp);
-
-        $allowed_mimes = [
-            'image/png',
-            'image/jpeg',
-            'image/webp',
-            'image/gif'
-        ];
-
-        if (in_array($file_type, $allowed_mimes) ) 
-        {
-            $ext = pathinfo($_FILES['bot_icon']['name'], PATHINFO_EXTENSION);
-            $ext = strtolower($ext);
-
-            $upload_dir = plugin_dir_path(__FILE__) . '../assets/img/';
-            if ( ! file_exists($upload_dir) ) {
-                mkdir($upload_dir, 0755, true);
-            }
-
-            $destination = $upload_dir . 'profile-picture.' . $ext;
-
-            $old_files = glob($upload_dir . 'profile-picture.*');
-            foreach ($old_files as $old) {
-                if ($old !== $destination) 
-                    unlink($old);
-            }
-
-            if ( move_uploaded_file($file_tmp, $destination) ) {
-                update_option('ba_bot_icon_ext', $ext);
-            }
-        }
-    }
-
-    $pfp_img_url = '';
-    $ext = get_option('ba_bot_icon_ext');
-    if ($ext)
-    {
-        $pfp_img_url = AI_CHATBOT_URL . '/assets/img/profile-picture' . '.' . $ext;
-    }
+    ba_chatbot_handle_icon_upload();
 
     wp_send_json_success([
         'message' => 'Saved settings successfully',
-        'image_url' => $pfp_img_url,
+        'image_url' => get_option('ba_bot_icon_url'),
         'qdrant_url' => [
             'update' => $changed_qdrant_url,
             'success' => $changed_qdrant_url ? $url_change_success : false,
@@ -457,3 +415,52 @@ function ai_chatbot_save_settings_handler()
     wp_die();
 }
 add_action('wp_ajax_ai_chatbot_save_settings', 'ai_chatbot_save_settings_handler');
+
+
+function ba_chatbot_handle_icon_upload($file_input_name = 'bot_icon') {
+
+    if (empty($_FILES[$file_input_name])) {
+        return false;
+    }
+
+    $file_tmp  = $_FILES[$file_input_name]['tmp_name'];
+    $file_type = mime_content_type($file_tmp);
+
+    $allowed_mimes = [
+        'image/png',
+        'image/jpeg',
+        'image/webp',
+        'image/gif'
+    ];
+
+    if (!in_array($file_type, $allowed_mimes)) {
+        return false;
+    }
+
+    $ext = strtolower(pathinfo($_FILES[$file_input_name]['name'], PATHINFO_EXTENSION));
+
+    $upload_dir_info = wp_upload_dir();
+    $upload_dir = $upload_dir_info['basedir'] . '/ba-chatbot/';
+    $upload_url = $upload_dir_info['baseurl'] . '/ba-chatbot/';
+
+    if (!file_exists($upload_dir)) {
+        wp_mkdir_p($upload_dir);
+    }
+
+    $destination = $upload_dir . 'profile-picture.' . $ext;
+
+    $old_files = glob($upload_dir . 'profile-picture.*');
+    foreach ($old_files as $old) {
+        if ($old !== $destination) {
+            @unlink($old);
+        }
+    }
+
+    if (move_uploaded_file($file_tmp, $destination)) {
+        update_option('ba_bot_icon_ext', $ext);
+        update_option('ba_bot_icon_url', $upload_url . 'profile-picture.' . $ext);
+        return true;
+    }
+
+    return false;
+}
