@@ -1,0 +1,14 @@
+{
+  "name": "bjornar/chatbot-plugin",
+  "description": "Chatbot plugin",
+  "type": "wordpress-plugin",
+  "require": {
+    "smalot/pdfparser": "^2.0",
+    "phpoffice/phpword": "^1.4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Chatbot\\": "src/"
+    }
+  }
+}
