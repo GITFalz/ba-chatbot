@@ -105,7 +105,7 @@ function ai_chatbot_file_deletion_handler()
     $result = ai_chatbot_file_deletion($file_name);
 
     if (!$result['success']) {
-        wp_send_json_error(['message' => 'Failed to delete file ' . $file_name . "."]);
+        wp_send_json_error(['message' => 'Failed to delete file ' . $file_name . ", for reason: " . $result['message']]);
         wp_die();
     }
 
@@ -132,6 +132,14 @@ function ai_chatbot_file_deletion($file_name)
         $attach_id = $attachments[0]->ID;
         $document_id = 'file_' . $attach_id;
 
+        $result = ai_chatbot_delete_qdrant_document($document_id);
+
+        if (!$result['success'])
+        {
+            $result['message'] .= " Document: " . $document_id;
+            return $result;
+        }
+
         $file_path = get_attached_file($attach_id);
         if ($file_path && file_exists($file_path)) {
             unlink($file_path);
@@ -139,7 +147,11 @@ function ai_chatbot_file_deletion($file_name)
 
         wp_delete_attachment($attach_id, true);
 
-        return ai_chatbot_delete_qdrant_document($document_id);
+        return [
+            'success' => true,
+            'message' => "",
+            'data'    => null,
+        ];
     }
     else
     {

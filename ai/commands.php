@@ -260,6 +260,30 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
     return $body['choices'][0]['message']['content'] ?? null;
 }
 
+function ai_chatbot_create_qdrant_payload_index() {
+    $qdrant_url   = ba_decrypt(get_option("ba_qdrant_url"));
+    $qdrant_api   = ba_decrypt(get_option("ba_qdrant_api_key"));
+    $qdrant_collection = get_option("ba_bot_qdrant_collection");
+
+    $url = $qdrant_url . '/collections/' . $qdrant_collection . '/index';
+
+    $body = [
+        'field_name' => 'document_id',
+        'field_schema' => 'keyword',
+    ];
+
+    $response = wp_remote_post($url, [
+        'method'  => 'PUT',
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'api-key'      => $qdrant_api,
+        ],
+        'body' => json_encode($body),
+    ]);
+
+    return json_decode(wp_remote_retrieve_body($response), true);
+}
+
 
 function ai_chatbot_delete_qdrant_document($document_id) {
 
@@ -288,10 +312,10 @@ function ai_chatbot_delete_qdrant_document($document_id) {
     ]);
 
     if (is_wp_error($response)) {
-        error_log('Qdrant delete failed: ' . $response->get_error_message());
+        $error_message = $response->get_error_message();
         return [
             'success' => false,
-            'message' => "Failed to connect to Qdrant: $error_message",
+            'message' => "Failed to connect to Qdrant: " . $error_message,
             'data'    => null,
         ];
     }
@@ -299,7 +323,8 @@ function ai_chatbot_delete_qdrant_document($document_id) {
     $res = json_decode(wp_remote_retrieve_body($response), true);
     
     if (!isset($res['status']) || $res['status'] !== 'ok') {
-        $msg = isset($res['status']) ? "Qdrant responded: {$res['status']}" : "Unexpected response from Qdrant";
+        $status = implode(', ', $res['status']);
+        $msg = isset($res['status']) ? "Qdrant responded: " . $status : "Unexpected response from Qdrant";
         return [
             'success' => false,
             'message' => $msg,

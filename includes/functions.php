@@ -28,5 +28,5 @@ function ba_get_openai_api_key()
 
 function ai_chatbot_run_updates($installed)
 {
-    
+    ai_chatbot_create_qdrant_payload_index();
 }
