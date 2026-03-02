@@ -88,41 +88,41 @@
                 loading.textContent = '...';
                 messages.appendChild(loading);
                 scrollMessagesToBottom();
-                // Ajax
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', ai_chatbot_widget.ajaxurl, true);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.onload = function() {
+
+                let formData = new FormData();
+                formData.append('action', 'ai_chatbot_search');
+                formData.append('question', msg);
+
+                fetch(ai_chatbot_widget.ajaxurl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(res => {
                     messages.removeChild(loading);
-                    if (xhr.status === 200) {
-                        try {
-                            var res = JSON.parse(xhr.responseText);
-                            if (res.success && res.data && res.data.answer) {
-                                var botMsg = document.createElement('div');
-                                botMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                                botMsg.innerHTML = '<strong>Assistent:</strong> ' + document.createTextNode(res.data.answer).textContent;
-                                messages.appendChild(botMsg);
-                            } else {
-                                var errMsg = document.createElement('div');
-                                errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                                errMsg.innerHTML = '<strong>Assistent:</strong> Geen antwoord gevonden.';
-                                messages.appendChild(errMsg);
-                            }
-                        } catch(e) {
-                            var errMsg = document.createElement('div');
-                            errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                            errMsg.innerHTML = '<strong>Assistent:</strong> Fout.';
-                            messages.appendChild(errMsg);
-                        }
+
+                    if (res.success && res.data && res.data.answer) {
+                        var botMsg = document.createElement('div');
+                        botMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
+                        botMsg.innerHTML = '<strong>Assistent:</strong> ' + document.createTextNode(res.data.answer).textContent;
+                        messages.appendChild(botMsg);
                     } else {
                         var errMsg = document.createElement('div');
                         errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                        errMsg.innerHTML = '<strong>Assistent:</strong> Serverfout.';
+                        errMsg.innerHTML = '<strong>Assistent:</strong> Geen antwoord gevonden.';
                         messages.appendChild(errMsg);
                     }
+
                     scrollMessagesToBottom();
-                };
-                xhr.send('action=ai_chatbot_search&question=' + encodeURIComponent(msg));
+                })
+                .catch(err => {
+                    messages.removeChild(loading);
+                    var errMsg = document.createElement('div');
+                    errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
+                    errMsg.innerHTML = '<strong>Assistent:</strong> Serverfout.';
+                    messages.appendChild(errMsg);
+                    scrollMessagesToBottom();
+                });
             });
         }
     });

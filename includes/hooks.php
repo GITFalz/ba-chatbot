@@ -1,37 +1,65 @@
 <?php
 
 add_action('admin_enqueue_scripts', function($hook) {
-    if ($hook !== 'toplevel_page_ai-chatbot-admin') {
-        return;
+    if ($hook === 'toplevel_page_ai-chatbot-admin')
+    {
+        wp_enqueue_style( 
+            'ai-chatbot-pbg-style-css', 
+            AI_CHATBOT_URL . '/assets/css/pbg-style.css',
+            array(),
+            '1.1'
+        );
+
+        wp_enqueue_style( 
+            'ai-chatbot-admin-css', 
+            AI_CHATBOT_URL . '/assets/css/admin-panel.css',
+            array(),
+            '1.1'
+        );
+
+        wp_enqueue_script(
+            'ai-chatbot-admin-js',
+            AI_CHATBOT_URL . '/assets/js/admin-panel.js',
+            ['jquery'],
+            null,
+            true
+        );
+
+        wp_localize_script('ai-chatbot-admin-js', 'AIChatbot', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ai_chatbot_handler')
+        ]);
     }
 
-    wp_enqueue_style( 
-        'ai-chatbot-pbg-style-css', 
-        AI_CHATBOT_URL . '/assets/css/pbg-style.css',
-        array(),
-        '1.1'
-    );
+    if ($hook === 'ai-chatbot-admin_page_ai-chatbot-analytics')
+    {
+        wp_enqueue_style( 
+            'ai-chatbot-pbg-style-css', 
+            AI_CHATBOT_URL . '/assets/css/pbg-style.css',
+            array(),
+            '1.1'
+        );
 
-    wp_enqueue_style( 
-        'ai-chatbot-admin-css', 
-        AI_CHATBOT_URL . '/assets/css/admin-panel.css',
-        array(),
-        '1.1'
-    );
+        wp_enqueue_style( 
+            'ai-chatbot-admin-css', 
+            AI_CHATBOT_URL . '/assets/css/admin-panel.css',
+            array(),
+            '1.1'
+        );
 
-    wp_enqueue_script(
-        'ai-chatbot-admin-js',
-        AI_CHATBOT_URL . '/assets/js/admin-panel.js',
-        ['jquery'],
-        null,
-        true
-    );
+        wp_enqueue_script(
+            'ai-analytics-js',
+            AI_CHATBOT_URL . '/assets/js/analytics.js',
+            ['jquery'],
+            null,
+            true
+        );
 
-    wp_localize_script('ai-chatbot-admin-js', 'AIChatbot', [
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('ai_chatbot_handler')
-    ]);
-
+        wp_localize_script('ai-analytics-js', 'AIChatbot', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ai_chatbot_handler')
+        ]);
+    }
 });
 
 
@@ -52,21 +80,22 @@ add_action('wp_enqueue_scripts', function() {
 function ai_chatbot_search_handler() {
     $question = isset($_POST['question']) ? sanitize_text_field($_POST['question']) : '';
     if (!$question) {
-        error_log('[AI Chatbot] No question provided.');
         wp_send_json_error('No question provided.');
     }
+
+    $question_id = ai_chatbot_store_question($question);
 
     // Get embedding for question
     $embedding = ai_chatbot_send_to_openai_embeddings($question);
     if (!$embedding) {
-        error_log('[AI Chatbot] Failed to get embedding for question: ' . $question);
+        ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error('Failed to get embedding.');
     }
 
     // Query Qdrant
     $results = ai_chatbot_query_qdrant($embedding, 5);
     if (!$results || empty($results['result'])) {
-        error_log('[AI Chatbot] No results found in Qdrant for question: ' . $question);
+        ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error('No results found.');
     }
     
@@ -81,9 +110,11 @@ function ai_chatbot_search_handler() {
     // Ask LLM
     $answer = ai_chatbot_ask_llm($question, $context_chunks);
     if (!$answer) {
-        error_log('[AI Chatbot] LLM failed to generate an answer for question: ' . $question);
+        ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error('LLM failed to generate an answer.');
     }
+
+    ai_chatbot_set_response($question_id, $answer);
     wp_send_json_success(['answer' => $answer]);
 }
 add_action('wp_ajax_nopriv_ai_chatbot_search', 'ai_chatbot_search_handler');

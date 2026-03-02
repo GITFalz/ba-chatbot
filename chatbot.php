@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BA Chatbot
  * Description: Chatbot voor je website, BuroAmstelveen.
- * Version:     1.6.0
+ * Version:     1.7.0
  * Author:      Bjornar Schinkel
  */
 
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 // Plugin constants (keep here)
 define('AI_CHATBOT_PATH', plugin_dir_path(__FILE__));
 define('AI_CHATBOT_URL', plugin_dir_url(__FILE__));
-define('AI_CHATBOT_VERSION', '1.6.0');
+define('AI_CHATBOT_VERSION', '1.7.0');
 
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
@@ -23,6 +23,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 require_once AI_CHATBOT_PATH . 'includes/functions.php';
 require_once AI_CHATBOT_PATH . 'includes/parser.php';
 require_once AI_CHATBOT_PATH . 'includes/hooks.php';
+require_once AI_CHATBOT_PATH . 'includes/database.php';
 require_once AI_CHATBOT_PATH . 'includes/shortcodes.php';
 require_once AI_CHATBOT_PATH . 'templates/admin.php';
 require_once AI_CHATBOT_PATH . 'ai/commands.php';
@@ -38,6 +39,7 @@ use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
  */
 function ai_chatbot_activate() {
     ai_chatbot_create_qdrant_payload_index();
+    ai_chatbot_create_tables();
 }
 register_activation_hook(__FILE__, 'ai_chatbot_activate');
 

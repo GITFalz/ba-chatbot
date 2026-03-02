@@ -11,6 +11,15 @@ add_action('admin_menu', function() {
         'dashicons-upload',
         80
     );
+
+    add_submenu_page(
+        'ai-chatbot-admin',
+        'Analytics',
+        'Analytics',
+        'manage_options',
+        'ai-chatbot-analytics',
+        'ai_chatbot_analytics_panel'
+    );
 });
 
 function ai_chatbot_admin_panel() {
@@ -102,6 +111,7 @@ function ai_chatbot_admin_panel() {
     $gpt_api           = get_option('ba_gpt_api_key');
 
     $qdrant_collection = get_option('ba_bot_qdrant_collection');
+    $gtag              = get_option('ba_bot_gtag');
     $bot_name          = get_option('ba_bot_name');
     $bot_intro         = get_option('ba_bot_intro_message');
     $open_widget       = get_option('ba_bot_open');
@@ -236,6 +246,11 @@ function ai_chatbot_admin_panel() {
                         <input type="text" id="ba_qdrant_collection" class="ba-chatbot-input" placeholder="e.g. website_knowledge" value="<?=$qdrant_collection?>">
                     </div>
 
+                    <div class="flex col gap-2 b-1 b-gray-3 p-2 rounded" id="ba_chatbot_gpt_api">
+                        <label for="ba_chatgpt_api_key">ChatGPT API Key</label>
+                        <input type="text" id="ba_chatgpt_api_key" class="ba-chatbot-input" placeholder="<?php echo $gpt_api ? '..........' : 'Enter API Key'?>">
+                    </div>
+
                     <div class="flex col gap-2 b-1 b-gray-3 p-2 rounded" id="ba_chatbot_bot_name">
                         <label for="ba_bot_name">Bot Name</label>
                         <input type="text" id="ba_bot_name" class="ba-chatbot-input" placeholder="e.g. Support Assistant" value="<?=$bot_name?>">
@@ -338,5 +353,107 @@ function ai_chatbot_admin_panel() {
         </div>
     </div>
 </div>
+    <?php
+}
+
+function ai_chatbot_analytics_panel() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'ai_chat_messages';
+
+    // Fetch stats
+    $total_messages = $wpdb->get_var("SELECT COUNT(*) FROM $table");
+
+    // Weekly message counts (last 7 days)
+    $weekly_counts = $wpdb->get_results("
+        SELECT DATE(created_at) as day, COUNT(*) as count
+        FROM $table
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+    ", ARRAY_A);
+
+    // Prepare JS data for chart
+    $chart_labels = [];
+    $chart_data = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $day = date('Y-m-d', strtotime("-$i days"));
+        $chart_labels[] = $day;
+        $found = false;
+        foreach ($weekly_counts as $row) {
+            if ($row['day'] === $day) {
+                $chart_data[] = (int)$row['count'];
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) $chart_data[] = 0;
+    }
+    ?>
+    <div class="ba-chatbot-admin-wrap">
+        <div class="ba-chatbot-page-header">
+            <h1>AI Chatbot Analytics</h1>
+            <p>Overview of messages and conversations.</p>
+        </div>
+
+        <!-- Top Stats -->
+        <div class="ba-chatbot-main-grid">
+            <div class="ba-chatbot-left-col">
+                <div class="bac-row" style="gap:16px;">
+                    <div class="ba-chatbot-card" style="padding:16px; flex:1;">
+                        <h2>Messages Sent</h2>
+                        <p style="font-size:24px; font-weight:700; margin-top:8px;"><?php echo $total_messages; ?></p>
+                    </div>
+                </div>
+
+                <!-- Weekly Bar Chart -->
+                <div class="ba-chatbot-card" style="padding:16px; margin-top:16px;">
+                    <h2>Messages Last 7 Days</h2>
+                    <canvas id="ba-chatbot-weekly-chart" style="margin-top:12px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="ba-chatbot-right-col">
+                <!-- Download Section -->
+                <div class="ba-chatbot-card" style="padding:16px;">
+                    <h2>Download Conversations</h2>
+                    <div>
+                        <input type="hidden" name="page" value="<?php echo esc_attr($_GET['page']); ?>">
+                        <div class="ba-chatbot-form-group">
+                            <label for="download_day">Select Date:</label>
+                            <input type="date" id="download_day" name="download_day" class="ba-chatbot-input" value="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                        <div class="ba-chatbot-form-group" style="margin-top:8px;">
+                            <button id="bac_download" class="ba-chatbot-primary-btn">Download Logs</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const ctx = document.getElementById('ba-chatbot-weekly-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo wp_json_encode($chart_labels); ?>,
+                datasets: [{
+                    label: 'Messages',
+                    data: <?php echo wp_json_encode($chart_data); ?>,
+                    backgroundColor: '#2271b1'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
     <?php
 }
