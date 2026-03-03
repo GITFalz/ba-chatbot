@@ -45,7 +45,6 @@ function ai_chatbot_store_question($question)
     
 
     if ($inserted === false) {
-        error_log('[AI Chatbot] Failed to store question: ' . $wpdb->last_error);
         return false;
     }
 
@@ -79,7 +78,6 @@ function ai_chatbot_set_response($question_id, $response)
     );
 
     if ($updated === false) {
-        error_log('[AI Chatbot] Failed to store response: ' . $wpdb->last_error);
         return false;
     }
 
@@ -149,15 +147,6 @@ function ai_chatbot_download_conversations_txt($date)
 
 function ai_chatbot_download_conversations_handler()
 {
-    if (!isset($_GET['download_chatbot_day']))
-        error_log("fail 1");
-
-    if (!current_user_can('manage_options'))
-        error_log("fail 2");
-
-    if (!wp_verify_nonce($_GET['ai_chatbot_nonce'], 'ai_chatbot_handler'))
-        error_log("fail 3");
-
     if (isset($_GET['download_chatbot_day']) && current_user_can('manage_options') && wp_verify_nonce($_GET['ai_chatbot_nonce'], 'ai_chatbot_handler')) {
         $date = sanitize_text_field($_GET['download_chatbot_day']);
         ai_chatbot_download_conversations_txt($date);

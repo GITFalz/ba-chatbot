@@ -10,19 +10,17 @@ function ai_chatbot_process_uploaded_file($filepath, $type)
 {
     if (!file_exists($filepath))
     {
-        error_log("File does not exist: $filepath");
         return [
-            "success" => false
+            "success" => false,
+            'message' => 'File does not exist',
         ];
     }
 
     $text = '';
     if ($type === 'text/plain' || $type === 'text/markdown' || $type === 'text/x-markdown') 
     {
-        error_log("File is a text or markdown file");
         $text = file_get_contents($filepath);
     } elseif ($type === 'application/pdf') {
-        error_log("File is a pdf file");
         $parser = new Parser();
         $pdf = $parser->parseFile($filepath);
         foreach ($pdf->getPages() as $page) {
@@ -32,10 +30,8 @@ function ai_chatbot_process_uploaded_file($filepath, $type)
         // if text is empty, try custom parser
         if (trim($text) === '') {
             $text = parsePdf($filepath);
-            error_log($text);
         }
     } elseif ($type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || $type === 'application/msword') {
-        error_log("File is a docx file");
         $phpWord = IOFactory::load($filepath);
         foreach ($phpWord->getSections() as $section) {
             $elements = $section->getElements();
@@ -103,7 +99,6 @@ function ai_chatbot_send_to_openai_embeddings($chunk) {
 
     $body = json_encode($data);
     if ($body === false) {
-        error_log('JSON encode failed: ' . json_last_error_msg() . " " . $chunk);
         return false;
     }
 

@@ -137,7 +137,6 @@ function ai_chatbot_search_handler() {
 
     // Query Qdrant
     $results = ai_chatbot_query_qdrant($embeddingResult['embedding'], 5);
-    error_log(print_r($results, true));
     if (!$results["success"] || empty($results['data']['result'])) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error(["message" => $results['message']]);
@@ -297,7 +296,6 @@ function ai_chatbot_upload_file_handler()
     $document_id = 'file_' . $attach_id;
 
     $data = ai_chatbot_process_uploaded_file($target, $type);
-    error_log(print_r($data, true));
 
     if ($data['success']) {
         foreach ($data['data'] as $embedding) {
