@@ -163,6 +163,11 @@ function ai_chatbot_file_deletion($file_name)
         $attach_id = $attachments[0]->ID;
         $document_id = 'file_' . $attach_id;
 
+        $file_path = get_attached_file($attach_id);
+        if ($file_path && file_exists($file_path)) {
+            unlink($file_path);
+        }
+
         $result = ai_chatbot_delete_qdrant_document($document_id);
 
         if (!$result['success'])
@@ -171,10 +176,7 @@ function ai_chatbot_file_deletion($file_name)
             return $result;
         }
 
-        $file_path = get_attached_file($attach_id);
-        if ($file_path && file_exists($file_path)) {
-            unlink($file_path);
-        }
+        
 
         wp_delete_attachment($attach_id, true);
 
