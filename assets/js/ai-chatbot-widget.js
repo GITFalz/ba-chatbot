@@ -106,6 +106,11 @@
                         botMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
                         botMsg.innerHTML = '<strong>Assistent:</strong> ' + document.createTextNode(res.data.answer).textContent;
                         messages.appendChild(botMsg);
+                    } else if (res.data && res.data.message) {
+                        var errMsg = document.createElement('div');
+                        errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
+                        errMsg.innerHTML = '<strong>Assistent:</strong> ' + res.data.message;
+                        messages.appendChild(errMsg);
                     } else {
                         var errMsg = document.createElement('div');
                         errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';

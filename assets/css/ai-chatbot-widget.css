@@ -162,6 +162,7 @@
 
     cursor: pointer;
     transition: background 0.2s !important;
+    padding: 0;
 }
 
 #ai-chatbot-widget-send svg {

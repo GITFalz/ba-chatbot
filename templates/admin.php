@@ -28,77 +28,6 @@ function ai_chatbot_admin_panel() {
         mkdir($upload_dir, 0755, true);
     }
 
-    $error = '';
-    $success = '';
-    $allowed_types = [
-        'application/pdf',
-        'text/plain',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
-        'application/msword', // doc
-    ];
-
-    // Handle file upload (multiple)
-    if (isset($_POST['ai_chatbot_upload'])) {
-        if (!empty($_FILES['ai_chatbot_file']['name'][0])) {
-            $files = $_FILES['ai_chatbot_file'];
-            $uploaded = 0;
-            for ($i = 0; $i < count($files['name']); $i++) {
-                $name = $files['name'][$i];
-                $type = $files['type'][$i];
-                $tmp = $files['tmp_name'][$i];
-                if (!in_array($type, $allowed_types)) {
-                    $error .= esc_html($name) . ': Invalid file type.<br>';
-                    continue;
-                }
-                // Move file first
-                $filename = wp_unique_filename($upload_dir, $name);
-                $target = $upload_dir . '/' . $filename;
-
-                if (move_uploaded_file($tmp, $target)) {
-                    // Register as WP attachment
-                    $filetype = wp_check_filetype($filename, null);
-                    $attachment = [
-                        'guid'           => $target,
-                        'post_mime_type' => $filetype['type'],
-                        'post_title'     => sanitize_file_name($filename),
-                        'post_content'   => '',
-                        'post_status'    => 'inherit',
-                        'meta_input'     => [
-                            '_ai_chatbot_uploaded' => true, // optional flag
-                        ],
-                    ];
-                    $attach_id = wp_insert_attachment($attachment, $target);
-
-                    // This is your stable document ID
-                    $document_id = 'file_' . $attach_id;
-
-                    // Process file and send to Qdrant
-                    $data = ai_chatbot_process_uploaded_file($target, $type);
-
-                    if ($data) {
-                        foreach ($data as $embedding) {
-                            if ($embedding) {
-                                $result = ai_chatbot_send_to_qdrant(
-                                    $embedding['embedding'], 
-                                    $embedding['text'], 
-                                    $document_id
-                                );
-                                error_log("Send to Qdrant result: " . print_r($result, true));
-                            }
-                        }
-                    }
-                } else {
-                    $error .= esc_html($name) . ': Upload failed.<br>';
-                }
-            }
-            if ($uploaded) {
-                $success = "$uploaded file(s) uploaded and processed.";
-            }
-        } else {
-            $error = 'No file selected.';
-        }
-    }
-
     $uploads = get_posts([
         'post_type'      => 'attachment',
         'post_status'    => 'inherit',
@@ -111,7 +40,6 @@ function ai_chatbot_admin_panel() {
     $gpt_api           = get_option('ba_gpt_api_key');
 
     $qdrant_collection = get_option('ba_bot_qdrant_collection');
-    $gtag              = get_option('ba_bot_gtag');
     $bot_name          = get_option('ba_bot_name');
     $bot_intro         = get_option('ba_bot_intro_message');
     $open_widget       = get_option('ba_bot_open');
@@ -357,37 +285,6 @@ function ai_chatbot_admin_panel() {
 }
 
 function ai_chatbot_analytics_panel() {
-    global $wpdb;
-    $table = $wpdb->prefix . 'ai_chat_messages';
-
-    // Fetch stats
-    $total_messages = $wpdb->get_var("SELECT COUNT(*) FROM $table");
-
-    // Weekly message counts (last 7 days)
-    $weekly_counts = $wpdb->get_results("
-        SELECT DATE(created_at) as day, COUNT(*) as count
-        FROM $table
-        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY DATE(created_at) ASC
-    ", ARRAY_A);
-
-    // Prepare JS data for chart
-    $chart_labels = [];
-    $chart_data = [];
-    for ($i = 6; $i >= 0; $i--) {
-        $day = date('Y-m-d', strtotime("-$i days"));
-        $chart_labels[] = $day;
-        $found = false;
-        foreach ($weekly_counts as $row) {
-            if ($row['day'] === $day) {
-                $chart_data[] = (int)$row['count'];
-                $found = true;
-                break;
-            }
-        }
-        if (!$found) $chart_data[] = 0;
-    }
     ?>
     <div class="ba-chatbot-admin-wrap">
         <div class="ba-chatbot-page-header">
@@ -401,7 +298,7 @@ function ai_chatbot_analytics_panel() {
                 <div class="bac-row" style="gap:16px;">
                     <div class="ba-chatbot-card" style="padding:16px; flex:1;">
                         <h2>Messages Sent</h2>
-                        <p style="font-size:24px; font-weight:700; margin-top:8px;"><?php echo $total_messages; ?></p>
+                        <p id="ba_total_messages" style="font-size:24px; font-weight:700; margin-top:8px;"></p>
                     </div>
                 </div>
 
@@ -418,7 +315,6 @@ function ai_chatbot_analytics_panel() {
                 <div class="ba-chatbot-card" style="padding:16px;">
                     <h2>Download Conversations</h2>
                     <div>
-                        <input type="hidden" name="page" value="<?php echo esc_attr($_GET['page']); ?>">
                         <div class="ba-chatbot-form-group">
                             <label for="download_day">Select Date:</label>
                             <input type="date" id="download_day" name="download_day" class="ba-chatbot-input" value="<?php echo date('Y-m-d'); ?>">
@@ -431,29 +327,5 @@ function ai_chatbot_analytics_panel() {
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-        const ctx = document.getElementById('ba-chatbot-weekly-chart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: <?php echo wp_json_encode($chart_labels); ?>,
-                datasets: [{
-                    label: 'Messages',
-                    data: <?php echo wp_json_encode($chart_data); ?>,
-                    backgroundColor: '#2271b1'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    </script>
     <?php
 }

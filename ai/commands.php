@@ -11,7 +11,9 @@ function ai_chatbot_process_uploaded_file($filepath, $type)
     if (!file_exists($filepath))
     {
         error_log("File does not exist: $filepath");
-        return [];
+        return [
+            "success" => false
+        ];
     }
 
     $text = '';
@@ -48,12 +50,17 @@ function ai_chatbot_process_uploaded_file($filepath, $type)
     if ($text) {
         $chunks = ai_chatbot_chunk_text($text);
         foreach ($chunks as $chunk) {
-            $embedding = ai_chatbot_send_to_openai_embeddings($chunk);
-            if ($embedding) {
+            $result = ai_chatbot_send_to_openai_embeddings($chunk);
+            if ($result['success']) 
+            {
                 $data[] = [
                     'text' => $chunk,
-                    'embedding' => $embedding,
+                    'embedding' => $result['embedding']
                 ];
+            }
+            else
+            {
+                return $result;
             }
         }
     }
@@ -111,20 +118,50 @@ function ai_chatbot_send_to_openai_embeddings($chunk) {
     ];
     $response = wp_remote_post($url, $args);
     if (is_wp_error($response)) {
-        error_log('OpenAI API request failed: ' . $response->get_error_message());
-        return null;
-    } 
-    else 
-    {
-        $body = wp_remote_retrieve_body($response);
-        $result = json_decode($body, true);
-        if (isset($result['data'][0]['embedding'])) {
-            return $result['data'][0]['embedding'];
-        } else {
-            error_log('OpenAI API response error: ' . $body);
-            return null;
-        }
+        return [
+            'success' => false,
+            'message' => $response->get_error_message(),
+        ];
     }
+
+    $status_code = wp_remote_retrieve_response_code($response);
+
+    if ($status_code < 200 || $status_code >= 300) {
+        return [
+            'success' => false,
+            'message' => 'HTTP Error: ' . $status_code,
+        ];
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return [
+            'success' => false,
+            'message' => 'Invalid JSON response',
+        ];
+    }
+
+    if (isset($data['error'])) {
+        return [
+            'success' => false,
+            'message' => $data['error']['message'] ?? 'OpenAI API error',
+        ];
+    }
+
+    if (!isset($data['data'][0]['embedding']))
+    {
+        return [
+            'success' => false,
+            'message' => 'OpenAI response did not contain embedding data'
+        ];
+    }
+
+    return [
+        'success' => true,
+        'embedding' => $data['data'][0]['embedding'],
+    ];
 }
 
 function ai_chatbot_send_to_qdrant($vector, $chunk, $document_id) {
@@ -153,9 +190,38 @@ function ai_chatbot_send_to_qdrant($vector, $chunk, $document_id) {
         ],
         'method'      => 'PUT'
     ];
+
     $response = wp_remote_post($url, $args);
-    $res = json_decode(wp_remote_retrieve_body($response), true);
-    return $res;
+    if (is_wp_error($response)) {
+        return [
+            'success' => false,
+            'message' => $response->get_error_message(),
+        ];
+    }
+
+    $status_code = wp_remote_retrieve_response_code($response);
+
+    if ($status_code < 200 || $status_code >= 300) {
+        return [
+            'success' => false,
+            'message' => 'HTTP Error: ' . $status_code,
+        ];
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return [
+            'success' => false,
+            'message' => 'Invalid JSON response',
+        ];
+    }
+
+    return [
+        'success' => true,
+        'data' => $data,
+    ];
 }
 
 function guidv4($data = null) {
@@ -193,11 +259,35 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
         'body' => json_encode($body),
     ]);
     if (is_wp_error($response)) {
-        error_log('[AI Chatbot] Qdrant query failed: ' . $response->get_error_message());
-        return null;
+        return [
+            'success' => false,
+            'message' => $response->get_error_message(),
+        ];
     }
-    $res = json_decode(wp_remote_retrieve_body($response), true);
-    return $res;
+
+    $status_code = wp_remote_retrieve_response_code($response);
+
+    if ($status_code < 200 || $status_code >= 300) {
+        return [
+            'success' => false,
+            'message' => 'HTTP Error: ' . $status_code,
+        ];
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return [
+            'success' => false,
+            'message' => 'Invalid JSON response',
+        ];
+    }
+
+    return [
+        'success' => true,
+        'data' => $data,
+    ];
 }
 
 function ai_chatbot_ask_llm($question, $context_chunks) {
@@ -320,15 +410,27 @@ function ai_chatbot_delete_qdrant_document($document_id) {
         ];
     }
 
-    $res = json_decode(wp_remote_retrieve_body($response), true);
-    
-    if (!isset($res['status']) || $res['status'] !== 'ok') {
-        $status = implode(', ', $res['status']);
-        $msg = isset($res['status']) ? "Qdrant responded: " . $status : "Unexpected response from Qdrant";
+    $res_body = wp_remote_retrieve_body($response);
+    $res = json_decode($res_body, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
         return [
             'success' => false,
-            'message' => $msg,
-            'data'    => $res,
+            'message' => 'Invalid JSON response from Qdrant',
+            'data'    => null,
+        ];
+    }
+
+    if (!isset($res['status']) || $res['status'] !== 'ok') {
+
+        $short_status = isset($res['status']) 
+            ? 'Status: ' . $res['status'] 
+            : 'Missing status field';
+
+        return [
+            'success' => false,
+            'message' => 'Qdrant request failed. ' . $short_status,
+            'data'    => null,
         ];
     }
 

@@ -450,6 +450,7 @@ function removeFile(id)
         let s = td.querySelector('span');
         if (s)
         {
+            s.classList.remove('ba-chatbot-badge-failed');
             s.classList.remove('ba-chatbot-badge-success');
             s.classList.add('ba-chatbot-badge-deleting');
             s.textContent = "Deleting";

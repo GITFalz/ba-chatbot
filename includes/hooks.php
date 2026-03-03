@@ -47,17 +47,60 @@ add_action('admin_enqueue_scripts', function($hook) {
             '1.1'
         );
 
-        wp_enqueue_script(
-            'ai-analytics-js',
-            AI_CHATBOT_URL . '/assets/js/analytics.js',
-            ['jquery'],
+        wp_register_script(
+            'chart-js',
+            'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+            [],
             null,
             true
         );
 
+        wp_enqueue_script(
+            'ai-analytics-js',
+            AI_CHATBOT_URL . '/assets/js/analytics.js',
+            ['jquery', 'chart-js'],
+            null,
+            true
+        );
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'ai_chat_messages';
+
+        // Fetch stats
+        $total_messages = $wpdb->get_var("SELECT COUNT(*) FROM $table");
+
+        // Weekly message counts (last 7 days)
+        $weekly_counts = $wpdb->get_results("
+            SELECT DATE(created_at) as day, COUNT(*) as count
+            FROM $table
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at) ASC
+        ", ARRAY_A);
+
+        // Prepare JS data for chart
+        $chart_labels = [];
+        $chart_data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = date('Y-m-d', strtotime("-$i days"));
+            $chart_labels[] = $day;
+            $found = false;
+            foreach ($weekly_counts as $row) {
+                if ($row['day'] === $day) {
+                    $chart_data[] = (int)$row['count'];
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) $chart_data[] = 0;
+        }
+
         wp_localize_script('ai-analytics-js', 'AIChatbot', [
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('ai_chatbot_handler')
+            'nonce' => wp_create_nonce('ai_chatbot_handler'),
+            'total_messages' => $total_messages,
+            'chart_labels' => $chart_labels,
+            'chart_data' => $chart_data
         ]);
     }
 });
@@ -86,22 +129,23 @@ function ai_chatbot_search_handler() {
     $question_id = ai_chatbot_store_question($question);
 
     // Get embedding for question
-    $embedding = ai_chatbot_send_to_openai_embeddings($question);
-    if (!$embedding) {
+    $embeddingResult = ai_chatbot_send_to_openai_embeddings($question);
+    if (!$embeddingResult['success']) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
-        wp_send_json_error('Failed to get embedding.');
+        wp_send_json_error(["message" => $embeddingResult['message']]);
     }
 
     // Query Qdrant
-    $results = ai_chatbot_query_qdrant($embedding, 5);
-    if (!$results || empty($results['result'])) {
+    $results = ai_chatbot_query_qdrant($embeddingResult['embedding'], 5);
+    error_log(print_r($results, true));
+    if (!$results["success"] || empty($results['data']['result'])) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
-        wp_send_json_error('No results found.');
+        wp_send_json_error(["message" => $results['message']]);
     }
     
     // Extract context chunks
     $context_chunks = [];
-    foreach ($results['result'] as $point) {
+    foreach ($results['data']['result'] as $point) {
         if (isset($point['payload']['text'])) {
             $context_chunks[] = $point['payload']['text'];
         }
@@ -163,21 +207,21 @@ function ai_chatbot_file_deletion($file_name)
         $attach_id = $attachments[0]->ID;
         $document_id = 'file_' . $attach_id;
 
-        $file_path = get_attached_file($attach_id);
-        if ($file_path && file_exists($file_path)) {
-            unlink($file_path);
-        }
-
         $result = ai_chatbot_delete_qdrant_document($document_id);
 
         if (!$result['success'])
         {
-            $result['message'] .= " Document: " . $document_id;
-            return $result;
+            return [
+                'success' => false,
+                'message' => $result['message'],
+                'data'    => null,
+            ];
         }
 
-        
-
+        $file_path = get_attached_file($attach_id);
+        if ($file_path && file_exists($file_path)) {
+            unlink($file_path);
+        }
         wp_delete_attachment($attach_id, true);
 
         return [
@@ -253,6 +297,7 @@ function ai_chatbot_upload_file_handler()
     $document_id = 'file_' . $attach_id;
 
     $data = ai_chatbot_process_uploaded_file($target, $type);
+    error_log(print_r($data, true));
 
     if ($data['success']) {
         foreach ($data['data'] as $embedding) {
@@ -262,6 +307,15 @@ function ai_chatbot_upload_file_handler()
                     $embedding['text'],
                     $document_id
                 );
+
+                if (!$result['success'])
+                {
+                    unlink($target);
+                    wp_delete_attachment($attach_id, true);
+
+                    wp_send_json_error(['message' => $result['message']]);
+                    wp_die();
+                }
             }
         }
     }
@@ -509,3 +563,52 @@ function ba_chatbot_handle_icon_upload($file_input_name = 'bot_icon') {
 
     return false;
 }
+
+function ba_chatbot_get_analytics_handler()
+{
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) 
+    {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+
+    global $wpdb;
+    $table = $wpdb->prefix . 'ai_chat_messages';
+
+    // Fetch stats
+    $total_messages = $wpdb->get_var("SELECT COUNT(*) FROM $table");
+
+    // Weekly message counts (last 7 days)
+    $weekly_counts = $wpdb->get_results("
+        SELECT DATE(created_at) as day, COUNT(*) as count
+        FROM $table
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+    ", ARRAY_A);
+
+    // Prepare JS data for chart
+    $chart_labels = [];
+    $chart_data = [];
+    for ($i = 6; $i >= 0; $i--) {
+        $day = date('Y-m-d', strtotime("-$i days"));
+        $chart_labels[] = $day;
+        $found = false;
+        foreach ($weekly_counts as $row) {
+            if ($row['day'] === $day) {
+                $chart_data[] = (int)$row['count'];
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) $chart_data[] = 0;
+    }
+
+    wp_send_json_success([
+        'total_messages' => $total_messages,
+        'chart_labels' => $chart_labels,
+        'chart_data' => $chart_data
+    ]);
+    wp_die();
+}
+add_action('wp_ajax_ba_chatbot_get_analytics', 'ba_chatbot_get_analytics_handler');

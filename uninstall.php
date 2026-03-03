@@ -26,3 +26,5 @@ foreach ($old_files as $file) {
 delete_option('ba_bot_icon_ext');
 delete_option('ba_bot_icon_url');
 delete_option('ai_chatbot_version');
+
+ai_chatbot_delete_tables();

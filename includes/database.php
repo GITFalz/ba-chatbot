@@ -166,3 +166,17 @@ function ai_chatbot_download_conversations_handler()
     wp_send_json_error();
 }
 add_action('wp_ajax_ai_chatbot_download_conversations', 'ai_chatbot_download_conversations_handler');
+
+function ai_chatbot_delete_tables()
+{
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'ai_chat_messages';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+    $sql = "DELETE TABLE $table_name;";
+
+    dbDelta($sql);
+}
