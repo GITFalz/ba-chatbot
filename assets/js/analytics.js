@@ -1,5 +1,17 @@
 jQuery(document).ready(function($) 
 {
+    // == Theme toggle ==
+    const btn = document.getElementById("themeToggle")
+
+    btn.onclick = () => {
+        document.body.classList.toggle("light-theme")
+        localStorage.setItem("ba_theme", document.body.classList.contains("light-theme") ? "light" : "dark")
+    }
+
+    const saved = localStorage.getItem("ba_theme")
+    btn.checked = saved !== "light";
+    // == End ==
+    
     const totalMsgs = document.getElementById("ba_total_messages");
     const downloadBtn = document.getElementById("bac_download");
     const downloadDay = document.getElementById("download_day");

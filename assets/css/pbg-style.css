@@ -115,9 +115,9 @@
 .bg-gray-4  { background-color: #9ca3af !important; }
 .bg-gray-5  { background-color: #6b7280 !important; }
 .bg-gray-6  { background-color: #4b5563 !important; }
-.bg-gray-7  { background-color: #374151 !important; }
-.bg-gray-8  { background-color: #1f2937 !important; }
-.bg-gray-9  { background-color: #111827 !important; }
+.bg-gray-7  { background-color: #313741 !important; }
+.bg-gray-8  { background-color: #252930 !important; }
+.bg-gray-9  { background-color: #16181d !important; }
 
 .bg-red-1 { background-color: #fee2e2 !important; }
 .bg-red-2 { background-color: #fecaca !important; }
@@ -179,14 +179,93 @@
 .bg-pink-8 { background-color: #9d174d !important; }
 .bg-pink-9 { background-color: #831843 !important; }
 
-.text-white { color: #ffffff !important; }
-.text-black { color: #000000 !important; }
-.text-gray-7{ color: #374151 !important; }
-.text-red-6 { color: #dc2626 !important; }
+.text-white   { color: #ffffff !important; }
+.text-black   { color: #000000 !important; }
 
-.b-0     { border: 0 solid !important; }
-.b-1     { border: 1px solid !important; }
-.b-2     { border: 2px solid !important; }
+.text-gray-1  { color: #f3f4f6 !important; }
+.text-gray-2  { color: #e5e7eb !important; }
+.text-gray-3  { color: #d1d5db !important; }
+.text-gray-4  { color: #9ca3af !important; }
+.text-gray-5  { color: #6b7280 !important; }
+.text-gray-6  { color: #4b5563 !important; }
+.text-gray-7  { color: #374151 !important; }
+.text-gray-8  { color: #1f2937 !important; }
+.text-gray-9  { color: #111827 !important; }
+
+.text-red-1 { color: #fee2e2 !important; }
+.text-red-2 { color: #fecaca !important; }
+.text-red-3 { color: #fca5a5 !important; }
+.text-red-4 { color: #f87171 !important; }
+.text-red-5 { color: #ef4444 !important; }
+.text-red-6 { color: #dc2626 !important; }
+.text-red-7 { color: #b91c1c !important; }
+.text-red-8 { color: #991b1b !important; }
+.text-red-9 { color: #7f1d1d !important; }
+
+.text-green-1 { color: #d1fae5 !important; }
+.text-green-2 { color: #a7f3d0 !important; }
+.text-green-3 { color: #6ee7b7 !important; }
+.text-green-4 { color: #34d399 !important; }
+.text-green-5 { color: #10b981 !important; }
+.text-green-6 { color: #059669 !important; }
+.text-green-7 { color: #047857 !important; }
+.text-green-8 { color: #065f46 !important; }
+.text-green-9 { color: #064e3b !important; }
+
+.text-blue-1 { color: #dbeafe !important; }
+.text-blue-2 { color: #bfdbfe !important; }
+.text-blue-3 { color: #93c5fd !important; }
+.text-blue-4 { color: #60a5fa !important; }
+.text-blue-5 { color: #3b82f6 !important; }
+.text-blue-6 { color: #2563eb !important; }
+.text-blue-7 { color: #1d4ed8 !important; }
+.text-blue-8 { color: #1e40af !important; }
+.text-blue-9 { color: #1e3a8a !important; }
+
+.text-yellow-1 { color: #fef3c7 !important; }
+.text-yellow-2 { color: #fde68a !important; }
+.text-yellow-3 { color: #fcd34d !important; }
+.text-yellow-4 { color: #fbbf24 !important; }
+.text-yellow-5 { color: #f59e0b !important; }
+.text-yellow-6 { color: #d97706 !important; }
+.text-yellow-7 { color: #b45309 !important; }
+.text-yellow-8 { color: #92400e !important; }
+.text-yellow-9 { color: #78350f !important; }
+
+.text-purple-1 { color: #ede9fe !important; }
+.text-purple-2 { color: #ddd6fe !important; }
+.text-purple-3 { color: #c4b5fd !important; }
+.text-purple-4 { color: #a78bfa !important; }
+.text-purple-5 { color: #8b5cf6 !important; }
+.text-purple-6 { color: #7c3aed !important; }
+.text-purple-7 { color: #6d28d9 !important; }
+.text-purple-8 { color: #5b21b6 !important; }
+.text-purple-9 { color: #4c1d95 !important; }
+
+.text-pink-1 { color: #fce7f3 !important; }
+.text-pink-2 { color: #fbcfe8 !important; }
+.text-pink-3 { color: #f9a8d4 !important; }
+.text-pink-4 { color: #f472b6 !important; }
+.text-pink-5 { color: #ec4899 !important; }
+.text-pink-6 { color: #db2777 !important; }
+.text-pink-7 { color: #be185d !important; }
+.text-pink-8 { color: #9d174d !important; }
+.text-pink-9 { color: #831843 !important; }
+
+.b-0 { 
+  border-width: 0 !important; 
+  border-style: solid !important;
+}
+
+.b-1 { 
+  border-width: 1px !important; 
+  border-style: solid !important;
+}
+
+.b-2 { 
+  border-width: 2px !important; 
+  border-style: solid !important;
+}
 
 .b-transparent { border-color: transparent !important; }
 .b-current     { border-color: currentColor !important; }
@@ -200,9 +279,9 @@
 .b-gray-4  { border-color: #9ca3af !important; }
 .b-gray-5  { border-color: #6b7280 !important; }
 .b-gray-6  { border-color: #4b5563 !important; }
-.b-gray-7  { border-color: #374151 !important; }
-.b-gray-8  { border-color: #1f2937 !important; }
-.b-gray-9  { border-color: #111827 !important; }
+.b-gray-7  { border-color: #2d343f !important; }
+.b-gray-8  { border-color: #292f36 !important; }
+.b-gray-9  { border-color: #1c1f25 !important; }
 
 .b-red-5   { border-color: #ef4444 !important; }
 .b-red-6   { border-color: #dc2626 !important; }
@@ -232,10 +311,12 @@
 .bb-blue-5 { border-bottom-color: #3b82f6 !important; }
 .bl-gray-7 { border-left-color: #374151 !important; }
 
+.rounded-xs { border-radius: 0.15rem !important; }
 .rounded    { border-radius: 0.375rem !important; }
 .rounded-md { border-radius: 0.5rem !important; }
 .rounded-lg { border-radius: 0.75rem !important; }
 .rounded-xl { border-radius: 1rem !important; }
+.rounded-2xl { border-radius: 2rem !important; }
 .rounded-full{ border-radius: 9999px !important; }
 
 .rel  { position: relative !important; }
@@ -264,37 +345,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
   border-radius: 9999px;
+  width: 28px;
+  height: 28px;
   font-size: 1.25rem;
   opacity: 1;
+  margin: 0;
+  padding: 0;
 }
 
 .loading {
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite, fadeOut 3s forwards 1s;
+  animation: ba-spin 1s linear infinite;
 }
 
 .success {
-  background-color: #10b981;
-  color: white;
   animation: successPop 0.6s ease-out, fadeOut 3s forwards 0.8s;
 }
 
 .fail {
-  background-color: #ef4444;
-  color: white;
   animation: failShake 0.5s ease-out, fadeOut 3s forwards 0.8s;
 }
 
 .warning {
-  background-color: #f59e0b;
-  color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
   animation: warningPulse 1.8s ease-in-out infinite alternate, fadeOut 3.2s forwards 0.8s;
 }
 
@@ -304,7 +376,8 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @keyframes successPop {

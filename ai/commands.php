@@ -240,6 +240,7 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
     $qdrant_collection = get_option("ba_bot_qdrant_collection");
 
     $url = $qdrant_url . '/collections/' . $qdrant_collection . '/points/search';
+    error_log($url);
     $body = [
         'vector' => $query_vector,
         'top'    => $top_k,
@@ -255,8 +256,8 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
     ]);
     if (is_wp_error($response)) {
         return [
-            'success' => false,
-            'message' => $response->get_error_message(),
+            'success' => true,
+            'data' => []
         ];
     }
 
@@ -290,7 +291,25 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
     $gpt_api = ba_decrypt(get_option("ba_gpt_api_key"));
     $api_key = $gpt_api;
 
+    $email = get_option("ba_bot_email");
+    $phone = get_option("ba_bot_phone");
+
+    $contact_text = "You must only answer using the provided context.
+If the answer cannot be found in the context, you must say that you do not know.
+Do not guess, invent, or assume information that is not explicitly present in the context.";
+
+    if ($email || $phone) {
+        if ($email && $phone) {
+            $contact_text .= " You can also suggest that the user contact us at $email or call us at $phone for further assistance.";
+        } elseif ($email) {
+            $contact_text .= " You can also suggest that the user contact us at $email for further assistance.";
+        } elseif ($phone) {
+            $contact_text .= " You can also suggest that the user call us at $phone for further assistance.";
+        }
+    }
+
     $context_text = implode("\n---\n", $context_chunks);
+    error_log("text: " . $context_text);
 
     $speech_instruction = "";
 
@@ -307,12 +326,14 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
     $system_prompt = "
         You are the official virtual assistant of this company. 
         Always answer as a representative of this company, using the information provided in the context. 
-        Respond in the same language as the user's question. 
+        Make sure to always respond in the same language as the user's question. 
         Use a friendly and helpful tone.
-        If the answer is not in the context, politely say you don't know. 
         Do not refer to 'the company' in the third person; use 'we', 'our', or 'us' as appropriate.";
 
+    $system_prompt .= $contact_text;
     $system_prompt .= $speech_instruction;
+
+    error_log("Prompt: " . $system_prompt);
 
     $messages = [
         [

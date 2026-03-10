@@ -137,7 +137,8 @@ function ai_chatbot_search_handler() {
 
     // Query Qdrant
     $results = ai_chatbot_query_qdrant($embeddingResult['embedding'], 5);
-    if (!$results["success"] || empty($results['data']['result'])) {
+    error_log("Query: " . print_r($results, true));
+    if (!$results["success"]) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error(["message" => $results['message']]);
     }
@@ -150,8 +151,12 @@ function ai_chatbot_search_handler() {
         }
     }
 
+    if (empty($context_chunks))
+        $context_chunks = ["Context: (none)"];
+
     // Ask LLM
-    $answer = ai_chatbot_ask_llm($question, $context_chunks);
+    $answer = ai_chatbot_ask_llm($question, context_chunks: $context_chunks);
+    error_log("Ask: " . print_r($answer, true));
     if (!$answer) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error('LLM failed to generate an answer.');
@@ -370,6 +375,8 @@ function ai_chatbot_save_settings_handler()
     $savedOptions[] = ai_chatbot_set_post_option('ba_bot_speech', 'speech_friendly');
     $savedOptions[] = ai_chatbot_set_post_option('ba_bot_speech', 'speech_respectful');
     $savedOptions[] = ai_chatbot_set_post_option('ba_bot_chat_color', 'chat_color');
+    $savedOptions[] = ai_chatbot_set_post_option('ba_bot_email', 'email');
+    $savedOptions[] = ai_chatbot_set_post_option('ba_bot_phone', 'phone_number');
 
     $changed_qdrant_url = isset($_POST['qdrant_url']);
     $url_change_success = false;

@@ -14,6 +14,8 @@ delete_option('ba_bot_intro_message');
 delete_option('ba_bot_chat_color');
 delete_option('ba_bot_open');
 delete_option('ba_bot_speech');
+delete_option('ba_bot_email');
+delete_option('ba_bot_phone');
 
 $upload_dir_info = wp_upload_dir();
 $upload_dir = $upload_dir_info['basedir'] . '/ba-chatbot/';
