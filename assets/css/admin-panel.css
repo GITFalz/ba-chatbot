@@ -55,8 +55,8 @@ body {
 
 .ba-chatbot-main p,
 .ba-chatbot-main h2 {
-    color: var(--text-main);
-    margin: 0;
+    color: var(--text-main) !important;
+    margin: 0 !important;
 }
 
 /* ===== Layout ===== */
