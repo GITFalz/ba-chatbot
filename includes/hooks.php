@@ -273,11 +273,21 @@ function ai_chatbot_upload_file_handler()
         wp_die();
     }
 
-    $upload_dir = AI_CHATBOT_PATH . 'uploads/';
-    $upload_url = AI_CHATBOT_URL . 'uploads/';
+    $upload_dir = wp_upload_dir()['basedir'] . '/' . "ba-chatbot/";
+    $upload_url = wp_upload_dir()['url'] . '/' . "ba-chatbot/";
+
+    if (!file_exists($upload_dir)) {
+        wp_mkdir_p($upload_dir); // WordPress-safe recursive directory creation
+    }
 
     $filename = wp_unique_filename($upload_dir, $name);
     $target = $upload_dir . $filename;
+
+    $filetype = wp_check_filetype($filename, null);
+    if (!in_array($filetype['type'], $allowed_types)) {
+        wp_send_json_error(['message' => $name . ': Invalid file type.']);
+        wp_die();
+    }
 
     if (!move_uploaded_file($tmp, $target)) {
         wp_send_json_error(['message' => $name . ': Upload failed.']);
@@ -336,7 +346,7 @@ function ai_chatbot_upload_file_handler()
         'file_name' => $filename,
         'attachment_id' => $attach_id,
         'document_id' => $document_id,
-        'file_url' => wp_upload_dir()['url'] . '/' . $filename,
+        'file_url' => $upload_url . $filename,
     ]);
 
     wp_die();

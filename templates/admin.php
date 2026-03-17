@@ -23,11 +23,6 @@ add_action('admin_menu', function() {
 });
 
 function ai_chatbot_admin_panel() {
-    $upload_dir = AI_CHATBOT_PATH . 'uploads/';
-    if (!file_exists($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
-    }
-
     $uploads = get_posts([
         'post_type'      => 'attachment',
         'post_status'    => 'inherit',
