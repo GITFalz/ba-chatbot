@@ -83,13 +83,18 @@
 
 #ai-chatbot-widget-header {
     background-color: var(--chat-color);
-    color: white;
+    color: white !important;
     padding: 12px 16px;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 17px !important;
+    font-weight: 600 !important;
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+#ai-chatbot-widget-header h2 {
+    font-size: 17px !important;
+    font-weight: 600 !important;
 }
 
 #ai-chatbot-widget-header img {
@@ -137,7 +142,7 @@
 
 #ai-chatbot-widget-input {
     flex: 1;
-    padding: 10px 14px;
+    padding: 0 14px;
     border: 1.5px solid var(--chat-color-border);
     border-radius: 8px;
     font-size: 15px;
@@ -233,7 +238,6 @@
 
 @media screen and (max-width: 480px) {
     #ai-chatbot-widget-header {
-        font-size: 16px;
         padding: 10px 14px;
     }
 

@@ -43,7 +43,6 @@ jQuery(document).ready(function($)
     const iconInput = iconUpload.querySelector("input");
 
     const saveBtn = document.getElementById("ba_chatbot_save_btn");
-    const saveIndicator = document.getElementById("ba_chatbot_save_indicator");
 
 
     // Settings menu items
@@ -403,59 +402,59 @@ jQuery(document).ready(function($)
         })
         .then(res => res.json())
         .then(res => {
-        if (res.success) {
-            let img = icon.querySelector('img');
-            if (img)
-            {
-                img.src = res.data.image_url + "?t=" + new Date().getTime();
-            }
-            else
-            {
-                icon.innerHTML = "<img src='" + res.data.image_url + "?t=" + new Date().getTime() + "' alt='Chat Icon' />"
-            }
+            if (res.success) {
+                let img = icon.querySelector('img');
+                if (img)
+                {
+                    img.src = res.data.image_url + "?t=" + new Date().getTime();
+                }
+                else
+                {
+                    icon.innerHTML = "<img src='" + res.data.image_url + "?t=" + new Date().getTime() + "' alt='Chat Icon' />"
+                }
 
-            if (iconArrow) iconArrow.style.display = "none";
-            if (iconPreview) iconPreview.style.display = "none";
+                if (iconArrow) iconArrow.style.display = "none";
+                if (iconPreview) iconPreview.style.display = "none";
 
-            let apiError = false;
+                let apiError = false;
 
-            if (res.data.qdrant_url && res.data.qdrant_url.update && !res.data.qdrant_url.success)
-            {
-                apiError = true;
-                setError(qdrantUrl.parentElement)
-                console.warn(res.data.qdrant_url.message);
-            }
+                if (res.data.qdrant_url && res.data.qdrant_url.update && !res.data.qdrant_url.success)
+                {
+                    apiError = true;
+                    setError(qdrantUrl.parentElement)
+                    console.warn(res.data.qdrant_url.message);
+                }
 
-            if (res.data.qdrant_api && res.data.qdrant_api.update && !res.data.qdrant_api.success)
-            {
-                apiError = true;
-                setError(qdrantApi.parentElement)
-                console.warn(res.data.qdrant_api.message);
-            }
+                if (res.data.qdrant_api && res.data.qdrant_api.update && !res.data.qdrant_api.success)
+                {
+                    apiError = true;
+                    setError(qdrantApi.parentElement)
+                    console.warn(res.data.qdrant_api.message);
+                }
 
-            if (res.data.gpt_api && res.data.gpt_api.update && !res.data.gpt_api.success)
-            {
-                apiError = true;
-                setError(gptApi.parentElement)
-                console.warn(res.data.gpt_api.message);
-            }
+                if (res.data.gpt_api && res.data.gpt_api.update && !res.data.gpt_api.success)
+                {
+                    apiError = true;
+                    setError(gptApi.parentElement)
+                    console.warn(res.data.gpt_api.message);
+                }
 
-            if (apiError)
-            {
-                showNotification('warning');
+                if (apiError)
+                {
+                    showNotification('warning');
+                }
+                else
+                {
+                    showNotification('success');
+                }
+            } else { 
+                console.alert("failed to save");
+                showNotification("fail");
             }
-            else
-            {
-                showNotification('success');
-            }
-        } else { 
-            console.alert("failed to save");
-            showNotification("fail");
-        }
-    })
-    .catch(err => {
-        console.error('AJAX request failed:', err);
-    });
+        })
+        .catch(err => {
+            console.error('AJAX request failed:', err);
+        });
     });
 });
 

@@ -16,6 +16,7 @@ delete_option('ba_bot_open');
 delete_option('ba_bot_speech');
 delete_option('ba_bot_email');
 delete_option('ba_bot_phone');
+delete_option('ba_languages');
 
 $upload_dir_info = wp_upload_dir();
 $upload_dir = $upload_dir_info['basedir'] . '/ba-chatbot/';
@@ -28,5 +29,6 @@ foreach ($old_files as $file) {
 delete_option('ba_bot_icon_ext');
 delete_option('ba_bot_icon_url');
 delete_option('ai_chatbot_version');
+
 
 ai_chatbot_delete_tables();

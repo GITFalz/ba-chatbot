@@ -35,12 +35,52 @@ function hex_to_rgb($hex) {
 }
 
 // Shortcode for frontend chatbot widget (Dutch, orange style, polished icons)
-add_shortcode('Chatbot', function() {
+add_shortcode('Chatbot', function($atts) {
+
+    $atts = shortcode_atts([
+        'lang' => 'auto'
+    ], $atts);
+
+    $lang = $atts['lang'];
+
     $pfp_img_url        = get_option('ba_bot_icon_url');
     $widget_color       = get_option('ba_bot_chat_color');
     $open_widget        = get_option('ba_bot_open');
     $chatbot_name       = get_option('ba_bot_name');
     $intro_message      = get_option('ba_bot_intro_message');
+    $languages          = get_option("ba_languages");
+
+    $user_label = "You";
+    $message_placeholder = "Write your question...";
+
+    if ($lang == "auto" || !isset($languages[$lang]))
+    {
+        if ($chatbot_name == "")
+        {
+            $chatbot_name = "Bot";
+        }
+        
+        if ($intro_message == "")
+        {
+            $intro_message = "Hello! how can i help you?";
+        }
+    }
+    else
+    {
+        if ($languages[$lang]["name"] != "") 
+            $chatbot_name = $languages[$lang]["name"];
+        else if ($chatbot_name == "")
+            $chatbot_name = "Bot";
+
+        if ($languages[$lang]["label"] != "") $user_label = $languages[$lang]["label"];
+        
+        if ($languages[$lang]["intro"] != "") 
+            $intro_message = $languages[$lang]["intro"];
+        else if ($intro_message == "")
+            $intro_message = "Hello! how can i help you?";
+
+        if ($languages[$lang]["placeholder"] != "") $message_placeholder = $languages[$lang]["placeholder"];
+    }
 
     ob_start();
     ?>
@@ -56,6 +96,7 @@ add_shortcode('Chatbot', function() {
             --chat-color-text-dark: <?= esc_attr(darken($widget_color, 50)) ?>;
         }
     </style>
+    <p id="ba_user_label"><?=htmlspecialchars($user_label, ENT_QUOTES, 'UTF-8')?></p>
     <div id="ai-chatbot-widget-button-content" class="<?=$open_widget ? 'ai-chatbot-open' : ''?>">
         <div id="ai-chatbot-widget-button-message">
             Vraag het <?= $chatbot_name ?>
@@ -83,7 +124,7 @@ add_shortcode('Chatbot', function() {
         </div>
 
         <form id="ai-chatbot-widget-form" autocomplete="off">
-            <input id="ai-chatbot-widget-input" type="text" placeholder="Typ <?=(get_option('ba_bot_speech') == 'friendly') ? 'jouw' : 'uw'?> vraag..." required />
+            <input id="ai-chatbot-widget-input" type="text" placeholder="<?=$message_placeholder?>" required />
             <button id="ai-chatbot-widget-send" type="submit" aria-label="Verstuur">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"/>

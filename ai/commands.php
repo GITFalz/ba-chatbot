@@ -294,7 +294,7 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
     $email = get_option("ba_bot_email");
     $phone = get_option("ba_bot_phone");
 
-    $contact_text = "You must only answer using the provided context.
+    $contact_text = " You must only answer using the provided context.
 If the answer cannot be found in the context, you must say that you do not know.
 Do not guess, invent, or assume information that is not explicitly present in the context.";
 
@@ -309,31 +309,24 @@ Do not guess, invent, or assume information that is not explicitly present in th
     }
 
     $context_text = implode("\n---\n", $context_chunks);
-    error_log("text: " . $context_text);
-
+    
     $speech_instruction = "";
 
     $speech_type = get_option("ba_bot_speech");
-    if ($speech_type == "friendly")
-    {
-        $speech_instruction = "The people asking questions are most likely average people so use; 'je' and 'jouw' instead of 'u' and 'uw' in Dutch to appear more friendly.";
-    }
-    else
-    {
-        $speech_instruction = "The people asking questions are most likely elderly so use; 'u' and 'uw' instead of 'je' and 'jouw' in Dutch to appear more respectful.";
+    if ($speech_type === "friendly") {
+        $speech_instruction = " Answer in a friendly, casual manner. Use informal pronouns where applicable (like 'je/jouw' in Dutch, 'tu' in French, 'du' in German).";
+    } else {
+        $speech_instruction = " Answer in a formal, respectful manner. Use formal pronouns where applicable (like 'u/uw' in Dutch, 'vous' in French, 'Sie' in German).";
     }
 
     $system_prompt = "
         You are the official virtual assistant of this company. 
-        Always answer as a representative of this company, using the information provided in the context. 
-        Make sure to always respond in the same language as the user's question. 
-        Use a friendly and helpful tone.
-        Do not refer to 'the company' in the third person; use 'we', 'our', or 'us' as appropriate.";
+        Always respond as a company representative. 
+        Answer in the same language as the user's question. 
+        Refer to the company as 'we', 'our', or 'us' never in the third person.";
 
     $system_prompt .= $contact_text;
     $system_prompt .= $speech_instruction;
-
-    error_log("Prompt: " . $system_prompt);
 
     $messages = [
         [

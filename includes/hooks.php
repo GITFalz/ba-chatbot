@@ -31,6 +31,41 @@ add_action('admin_enqueue_scripts', function($hook) {
         ]);
     }
 
+    if ($hook === 'ai-chatbot-admin_page_ai-chatbot-languages')
+    {
+        wp_enqueue_style( 
+            'ai-chatbot-pbg-style-css', 
+            AI_CHATBOT_URL . '/assets/css/pbg-style.css',
+            array(),
+            '1.1'
+        );
+
+        wp_enqueue_style( 
+            'ai-chatbot-admin-css', 
+            AI_CHATBOT_URL . '/assets/css/admin-panel.css',
+            array(),
+            '1.1'
+        );
+
+        wp_enqueue_style(
+            'ai-chatbot-widget-css', 
+            AI_CHATBOT_URL . 'assets/css/ai-chatbot-widget.css'
+        );
+
+        wp_enqueue_script(
+            'ai-languages-js',
+            AI_CHATBOT_URL . '/assets/js/languages.js',
+            ['jquery'],
+            null,
+            true
+        );
+
+        wp_localize_script('ai-languages-js', 'AIChatbot', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ai_chatbot_handler')
+        ]);
+    }
+
     if ($hook === 'ai-chatbot-admin_page_ai-chatbot-analytics')
     {
         wp_enqueue_style( 
@@ -110,11 +145,18 @@ add_action('admin_enqueue_scripts', function($hook) {
 add_action('wp_enqueue_scripts', function() {
     global $post;
     if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'Chatbot')) {
+        $chatbot_name       = get_option('ba_bot_name');
+        if ($chatbot_name == "")
+        {
+            $chatbot_name = "Bot";
+        }
+
         wp_enqueue_style('ai-chatbot-widget-css', AI_CHATBOT_URL . 'assets/css/ai-chatbot-widget.css');
         wp_enqueue_script('ai-chatbot-widget-js', AI_CHATBOT_URL . 'assets/js/ai-chatbot-widget.js', [], time(), true);
         wp_localize_script('ai-chatbot-widget-js', 'ai_chatbot_widget', [
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'speech' => (get_option("ba_bot_speech") == "friendly") ? "friendly" : "respectful"
+            'speech' => (get_option("ba_bot_speech") == "friendly") ? "friendly" : "respectful",
+            'botName' => $chatbot_name
         ]);
     }
 });
@@ -617,3 +659,23 @@ function ba_chatbot_get_analytics_handler()
     wp_die();
 }
 add_action('wp_ajax_ba_chatbot_get_analytics', 'ba_chatbot_get_analytics_handler');
+
+
+function ba_chatbot_save_languages_handler()
+{
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) 
+    {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+    
+    if (!isset($_POST['languages'])) {
+        wp_send_json_error(['message' => 'No languages.']);
+        wp_die();
+    }
+
+    $languages = json_decode(stripslashes($_POST['languages']), true);
+    update_option("ba_languages", $languages);
+    wp_send_json_success(['message' => 'Updated languages successfully!']);
+}
+add_action('wp_ajax_ba_chatbot_save_languages', 'ba_chatbot_save_languages_handler');
