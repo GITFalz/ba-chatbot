@@ -114,10 +114,48 @@ add_action('wp_enqueue_scripts', function() {
         wp_enqueue_script('ai-chatbot-widget-js', AI_CHATBOT_URL . 'assets/js/ai-chatbot-widget.js', [], time(), true);
         wp_localize_script('ai-chatbot-widget-js', 'ai_chatbot_widget', [
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'speech' => (get_option("ba_bot_speech") == "friendly") ? "friendly" : "respectful"
+            'speech' => (get_option("ba_bot_speech") == "friendly") ? "friendly" : "respectful",
+            'botName' => get_option('ba_bot_name', "Assistent")
         ]);
     }
 });
+
+function get_all_pages_for_chatbot($max_pages = 40, $chars_per_page = 1200) {
+    
+    $context_chunks = [];
+
+    $args = array(
+        'post_type'      => ['page', 'post'],
+        'post_status'    => 'publish',
+        'posts_per_page' => $max_pages,
+        'orderby'        => 'menu_order',
+        'order'          => 'ASC',
+        'no_found_rows'  => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    );
+
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            
+            $title   = get_the_title();
+            $url     = get_permalink();
+            $content = wp_strip_all_tags(get_the_content());
+            
+            // Clean and limit content per page
+            $content = preg_replace('/\s+/', ' ', $content);   // normalize whitespace
+            $content = substr(trim($content), 0, $chars_per_page);
+
+            $context_chunks[] = "Page Title: {$title}\nURL: {$url}\nContent:\n{$content}";
+        }
+        wp_reset_postdata();
+    }
+
+    return $context_chunks;
+}
 
 
 function ai_chatbot_search_handler() {
@@ -143,7 +181,7 @@ function ai_chatbot_search_handler() {
     }
     
     // Extract context chunks
-    $context_chunks = [];
+    $context_chunks = get_all_pages_for_chatbot();
     foreach ($results['data']['result'] as $point) {
         if (isset($point['payload']['text'])) {
             $context_chunks[] = $point['payload']['text'];
@@ -152,7 +190,7 @@ function ai_chatbot_search_handler() {
 
     if (empty($context_chunks))
         $context_chunks = ["Context: (none)"];
-
+    
     // Ask LLM
     $answer = ai_chatbot_ask_llm($question, context_chunks: $context_chunks);
     if (!$answer) {
@@ -625,3 +663,22 @@ function ba_chatbot_get_analytics_handler()
     wp_die();
 }
 add_action('wp_ajax_ba_chatbot_get_analytics', 'ba_chatbot_get_analytics_handler');
+
+function ba_chatbot_get_translated_text_handler()
+{
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) 
+    {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+
+    if (!isset($_POST["languages"]))
+    {
+        wp_send_json_error(['message' => 'No languages defined']);
+        wp_die();
+    }
+
+    error_log($_POST["languages"]);
+    wp_send_json_success(['message' => 'Success']);
+}
+add_action('wp_ajax_get_translated_text', 'ba_chatbot_get_translated_text_handler');

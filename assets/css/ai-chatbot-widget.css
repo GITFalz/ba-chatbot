@@ -120,6 +120,10 @@
     line-height: 1.45;
 }
 
+#ai-chatbot-widget-messages a {
+    color: #5b92be;
+}
+
 .ai-chatbot-message {
     margin: 0 0 12px;
 }

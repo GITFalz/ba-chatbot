@@ -286,77 +286,82 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
 }
 
 function ai_chatbot_ask_llm($question, $context_chunks) {
-
     $api_key = ba_decrypt(get_option("ba_gpt_api_key"));
-    $email = get_option("ba_bot_email");
-    $phone = get_option("ba_bot_phone");
+    $email   = get_option("ba_bot_email");
+    $phone   = get_option("ba_bot_phone");
 
-    $contact_text = "You must only answer using the provided context.
-If the answer cannot be found in the context, you must say that you do not know.
-Do not guess, invent, or assume information that is not explicitly present in the context.";
-
-    if ($email || $phone) {
-        if ($email && $phone) {
-            $contact_text .= " You can also suggest that the user contact us at $email or call us at $phone for further assistance.";
-        } elseif ($email) {
-            $contact_text .= " You can also suggest that the user contact us at $email for further assistance.";
-        } elseif ($phone) {
-            $contact_text .= " You can also suggest that the user call us at $phone for further assistance.";
-        }
+    $contact_text = "If the user needs more help, you can suggest contacting us";
+    if ($email && $phone) {
+        $contact_text .= " at $email or by phone at $phone.";
+    } elseif ($email) {
+        $contact_text .= " at $email.";
+    } elseif ($phone) {
+        $contact_text .= " by phone at $phone.";
+    } else {
+        $contact_text = "";
     }
 
-    $context_text = implode("\n---\n", $context_chunks);
+    $context_text = implode("\n\n---\n\n", $context_chunks);
 
     $speech_instruction = "";
-
     $speech_type = get_option("ba_bot_speech");
     if ($speech_type == "friendly")
     {
-        $speech_instruction = "The people asking questions are most likely average people so use; 'je' and 'jouw' instead of 'u' and 'uw' in Dutch to appear more friendly.";
+        $speech_instruction = "The people asking questions are most likely average people so use; 'je' and 'jouw' instead of 'u' and 'uw' in Dutch for example to appear more friendly.";
     }
     else
     {
-        $speech_instruction = "The people asking questions are most likely elderly so use; 'u' and 'uw' instead of 'je' and 'jouw' in Dutch to appear more respectful.";
+        $speech_instruction = "The people asking questions are most likely elderly so use; 'u' and 'uw' instead of 'je' and 'jouw' in Dutch for example to appear more respectful.";
     }
 
     $system_prompt = "
-        You are the official virtual assistant of this company. 
-        Always answer as a representative of this company, using the information provided in the context. 
-        Make sure to always respond in the same language as the user's question. 
-        Use a friendly and helpful tone.
-        Do not refer to 'the company' in the third person; use 'we', 'our', or 'us' as appropriate.";
+You are the official virtual assistant of this company. 
+Answer in a friendly and helpful tone. Always speak as 'we', 'our', or 'us'.
 
-    $system_prompt .= $contact_text;
-    $system_prompt .= $speech_instruction;
+You are given a list of pages from our website below (with title, URL and content).
+
+→ Use the information from these pages to answer the user's question.
+→ If the question is related to any of the pages (even if not exact word match), use the relevant information and include a helpful link.
+→ Only link to pages that are actually in the context. Never invent links.
+→ If you use information from a specific page, naturally include the link like this: 
+  \"... You can read more about this on our <a href=\"https://example.com/page\">Information page</a>.\"
+→ If nothing in the pages is relevant at all, then say you don't have that information and offer to help with something else or suggest contacting us.
+
+→ Always respond in the same language as the user's question.";
+
+    $system_prompt .= "\n\n" . $contact_text . "\n" . $speech_instruction;
 
     $messages = [
         [
             "role" => "system",
-            "content" => $system_prompt
+            "content" => trim($system_prompt)
         ],
         [
             "role" => "user",
-            "content" => "Context:\n$context_text\n\nQuestion:\n$question"
+            "content" => "Here are the pages from our website:\n\n" . $context_text . "\n\nQuestion: " . $question
         ]
     ];
 
+    // Recommended: Switch to a better model (much better at following instructions)
     $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
         'headers' => [
-            'Content-Type' => 'application/json',
+            'Content-Type'  => 'application/json',
             'Authorization' => 'Bearer ' . $api_key,
         ],
         'body' => json_encode([
-            'model' => 'gpt-3.5-turbo',
-            'messages' => $messages,
-            'temperature' => 0.2
-        ])
+            'model'       => 'gpt-4o-mini',     // ← Strongly recommended instead of gpt-3.5-turbo
+            'messages'    => $messages,
+            'temperature' => 0.3
+        ]),
+        'timeout' => 25
     ]);
 
-    if (is_wp_error($response)) 
+    if (is_wp_error($response)) {
+        error_log('OpenAI Error: ' . $response->get_error_message());
         return null;
+    }
 
     $body = json_decode(wp_remote_retrieve_body($response), true);
-
     return $body['choices'][0]['message']['content'] ?? null;
 }
 

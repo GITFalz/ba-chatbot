@@ -104,17 +104,17 @@
                     if (res.success && res.data && res.data.answer) {
                         var botMsg = document.createElement('div');
                         botMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                        botMsg.innerHTML = '<strong>Assistent:</strong> ' + document.createTextNode(res.data.answer).textContent;
+                        botMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> ' + document.createTextNode(res.data.answer).textContent;
                         messages.appendChild(botMsg);
                     } else if (res.data && res.data.message) {
                         var errMsg = document.createElement('div');
                         errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                        errMsg.innerHTML = '<strong>Assistent:</strong> ' + res.data.message;
+                        errMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> ' + res.data.message;
                         messages.appendChild(errMsg);
                     } else {
                         var errMsg = document.createElement('div');
                         errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                        errMsg.innerHTML = '<strong>Assistent:</strong> Geen antwoord gevonden.';
+                        errMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> Geen antwoord gevonden.';
                         messages.appendChild(errMsg);
                     }
 
@@ -124,7 +124,7 @@
                     messages.removeChild(loading);
                     var errMsg = document.createElement('div');
                     errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                    errMsg.innerHTML = '<strong>Assistent:</strong> Serverfout.';
+                    errMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> Serverfout.';
                     messages.appendChild(errMsg);
                     scrollMessagesToBottom();
                 });

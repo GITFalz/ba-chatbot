@@ -298,7 +298,7 @@ jQuery(document).ready(function($)
         let result = '<div id="ba-chatbot-result-' + data.id + '" class="ba-chatbot-result-item ' + cls + '">'
         + icon
         + '<div class="ba-chatbot-result-content">'
-            + '<div class="ba-chatbot-name">' + data.name + '</div>'
+            + '<span class="ba-chatbot-name">' + data.name + '</span>'
             + (data.reason ? '<div class="ba-chatbot-reason">' + data.reason + '</div>' : '')
         + '</div>';
 
