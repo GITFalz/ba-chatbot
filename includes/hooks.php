@@ -137,7 +137,6 @@ function ai_chatbot_search_handler() {
 
     // Query Qdrant
     $results = ai_chatbot_query_qdrant($embeddingResult['embedding'], 5);
-    error_log("Query: " . print_r($results, true));
     if (!$results["success"]) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error(["message" => $results['message']]);
@@ -156,7 +155,6 @@ function ai_chatbot_search_handler() {
 
     // Ask LLM
     $answer = ai_chatbot_ask_llm($question, context_chunks: $context_chunks);
-    error_log("Ask: " . print_r($answer, true));
     if (!$answer) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error('LLM failed to generate an answer.');
