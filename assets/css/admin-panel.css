@@ -51,6 +51,12 @@ body {
     background-color: var(--bg-main);
 }
 
+svg {
+    width: 18px;
+    height: 18px;
+}
+
+
 .ba-chatbot-main {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
     color: var(--text-main);
@@ -80,8 +86,7 @@ body {
     background-color: var(--input-bg);
     color: var(--text-normal);
     border: 2px solid var(--border-soft);
-    border-radius: 0.75rem;
-    padding: 5px 10px;
+    padding: 2px 10px;
     font-size: 15px;
 }
 
@@ -107,7 +112,7 @@ body {
     border-bottom: 2px solid var(--border-main);
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: 10px;
 }
 
 .ba-chatbot-page-header h1 {
@@ -127,6 +132,7 @@ body {
     width: 64px;
     min-width: 64px;
     height: 32px;
+    margin: 10px 0;
 }
 
 .ba-theme-toggle input {
@@ -140,7 +146,6 @@ body {
     inset: 0;
     background: var(--bg-soft);
     border: 1px solid var(--text-muted);
-    border-radius: 20px;
     cursor: pointer;
     transition: 0.25s;
 }
@@ -154,7 +159,6 @@ body {
     left: 3px;
     top: 3px;
     background: var(--theme-color);
-    border-radius: 50%;
     transition: 0.25s;
 }
 
@@ -174,13 +178,13 @@ body {
 
 .ba-theme-icon.sun {
     top: 18px;
-    right: 3px;
+    right: 7px;
     color: var(--theme-color);
 }
 
 .ba-theme-icon.moon {
     top: 18px;
-    left: 3px;
+    left: 7px;
     color: var(--theme-color);
 }
 
@@ -222,7 +226,7 @@ body {
     flex-direction: column; 
     background-color: var(--bg-card);
     border-color: var(--border-main);
-    max-width: 300px;
+    width: 300px;
 }
 
 .ba-chatbot-right-col-wide { 
@@ -242,7 +246,6 @@ body {
 
 /* ===== Cards ===== */
 .ba-chatbot-card {
-    border-radius: 4px;
     background-color: var(--bg-card);
     border-color: var(--border-main);
 }
@@ -544,7 +547,7 @@ body {
 }
 
 .ba-chatbot-card-header h2 {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 600;
     margin: 0;
 }
@@ -553,8 +556,8 @@ body {
     font-size: 20px;
     font-weight: 600;
     margin: 0;
-    min-width: 24px;
-    min-height: 24px;
+    min-width: 18px;
+    min-height: 18px;
 }
 
 .ba-chatbot-card-header p {
@@ -621,8 +624,7 @@ body {
     background-color: var(--input-bg);
     color: var(--text-normal);
     border: 2px solid var(--border-soft);
-    border-radius: 0.75rem;
-    padding: 12px;
+    padding: 10px;
     margin: 0 12px;
     font-size: 15px;
 }
@@ -630,7 +632,6 @@ body {
 .ba-toggle-card {
     padding: 0;
     margin: 0.4rem 12px;
-    border-radius: 0.75rem;
     border: 1px solid var(--border-soft);
     background-color: var(--input-bg);
     font-size: 15px; 
@@ -683,12 +684,11 @@ body {
 }
 
 .ba-toggle input:checked + .ba-slider::before {
-    transform: translateX(15px);
+    transform: translateX(30px);
 }
 
 .ba-radio-group {
     display: flex;
-    border-radius: 10px;
     gap: 10px;
 }
 
@@ -698,7 +698,6 @@ body {
 
 .ba-radio-group label {
     padding: 10px 18px;
-    border-radius: 0.75rem;
     border: 1px solid var(--border-soft);
     cursor: pointer;
     color: var(--text-normal);
@@ -838,19 +837,19 @@ body {
 }
 
 .ba-chatbot-primary-btn {
-    background: #125080;
+    background: #128830;
     padding: 6px 16px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 8px;
     border-color: transparent;
     cursor: pointer;
     transition: background 0.15s;
     color: white;
+    height: 32px;
 }
 
 .ba-chatbot-primary-btn:hover {
-    background: #135e96;
+    background: #14a738;
 }
 
 .ba-chatbot-file-btn {
@@ -895,7 +894,6 @@ body {
 
 
 .ba-add-language {
-    border-radius: 0.75rem;
     border: 2px dashed var(--border-hard);
     height: 100px;
 }
@@ -956,6 +954,9 @@ body {
     .ba-chatbot-side-panel {
         width: 100%;
     }
+    .ba-chatbot-right-col-wide {
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
@@ -963,9 +964,8 @@ body {
         flex-direction: column;
     }
 
-    .ba-chatbot-right-col,
-    .ba-chatbot-right-col-wide {
-        max-width: 100%;
+    .ba-chatbot-right-col {
+        width: 100%;
     }
 }
 
@@ -996,3 +996,4 @@ body {
         padding-bottom: 10px;
     }
 }
+

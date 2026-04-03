@@ -1,0 +1,32 @@
+DATE: 2026-03-03 10:18:10
+USER: hebben jullie plek in ulft
+BOT: Geen antwoord gevonden.
+--------------------
+DATE: 2026-03-03 10:19:12
+USER: hoe kan ik gastouder worden?
+BOT: Geen antwoord gevonden.
+--------------------
+DATE: 2026-03-03 10:22:06
+USER: kan ik gastouder worden?
+BOT: Geen antwoord gevonden.
+--------------------
+DATE: 2026-03-03 10:22:16
+USER: hebben jullie een kdv?
+BOT: Geen antwoord gevonden.
+--------------------
+DATE: 2026-03-03 11:03:54
+USER: kan ik gastouder worden
+BOT: Ja, u kunt gastouder worden. Om gastouder te worden, moet u voldoen aan bepaalde wettelijke eisen, zoals het hebben van een diploma mbo-2 helpende (zorg en) Welzijn, een certificaat goed gastouderschap of een gelijkwaardig diploma, een geldig EHBO-certificaat voor kinderen, minimaal 18 jaar oud zijn, handelingsbekwaam zijn en goed zelfstandig kunnen werken. Als u aan deze eisen voldoet en geïnteresseerd bent om gastouder te worden, kunt u zich inschrijven via ons inschrijfformulier of bellen naar 0315-23 17 75 en vragen naar Nicolette of Sanne voor meer informatie.
+--------------------
+DATE: 2026-03-03 11:05:29
+USER: welke opvang is in ulft?
+BOT: In Ulft zijn er drie soorten opvangfaciliteiten beschikbaar: 1. Peuteropvang Ulft, gevestigd aan de Nijverheidsweg 7 te Ulft. 2. Kinderdagverblijf Ulft, ook gelegen aan de Nijverheidsweg 7 te Ulft. 3. Buitenschoolse opvang (BSO) Ulft - Nijverheidsweg, eveneens op het adres Nijverheidsweg 7 in Ulft.
+--------------------
+DATE: 2026-03-03 12:31:32
+USER: wanneer ben je open?
+BOT: Wij zijn geopend op verschillende dagen en tijden, afhankelijk van de locatie en het programma. Op dinsdag, woensdag en donderdag zijn we meestal open van 14.00 tot 18.30 uur. Op donderdag zijn we ook open van 7.00 tot 8.30 uur. Tijdens vakanties kunnen de openingstijden variëren, bijvoorbeeld van 7.30 tot 18.30 uur op dinsdag, woensdag en donderdag. Voor specifieke informatie per locatie en eventuele afwijkende openingstijden, verwijs ik u graag naar de desbetreffende LRK-nummers en links die vermeld staan in de tekst.
+--------------------
+DATE: 2026-03-03 13:17:41
+USER: hoeveel mensen werken bij jullie?
+BOT: Op dit moment werken er veel medewerkers bij Juut & Co, verspreid over de verschillende vestigingen in de Achterhoek. We investeren in onze mensen en vormen samen een sterk team. Het exacte aantal medewerkers kan variëren, maar we streven ernaar om voldoende personeel te hebben om goede kinderopvang te bieden. Als u specifieke informatie wilt over het aantal medewerkers op een bepaalde locatie, raad ik u aan contact met ons op te nemen via het contactformulier op onze website of via telefoonnummer 0315231775.
+--------------------

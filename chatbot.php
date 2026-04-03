@@ -31,9 +31,6 @@ require_once AI_CHATBOT_PATH . 'vendor/yahnis-elsts/plugin-update-checker/plugin
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-// i am getting an error where it says it can't find the parser.php file, what should ido?
-// answer
-
 /**
  * Plugin activation hook
  */
@@ -71,17 +68,12 @@ function ai_chatbot_update_check()
 
 add_action('plugins_loaded', 'ai_chatbot_update_check');
 
-// ----------------------
-// GitHub Auto Update
-// ----------------------
-
-// Require the Plugin Update Checker library
 require_once AI_CHATBOT_PATH . 'vendor/yahnis-elsts/plugin-update-checker/plugin-update-checker.php';
 
 $updateChecker = PucFactory::buildUpdateChecker(
     'https://github.com/GITFalz/ba-chatbot/', // GitHub repo URL
     __FILE__,                                      // Full path to the main plugin file
-    'ba-chatbot'                                   // Plugin slug (folder name)
+    'ba-chatbot'
 );
 
 // Optional: use a GitHub release instead of the default branch
