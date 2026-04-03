@@ -101,6 +101,9 @@ function ai_chatbot_admin_panel() {
                                     if (!file_exists($file_path)) {
                                         $file_path = wp_get_upload_dir()['basedir'] . '/' . $upload->_wp_attached_file;
                                     }
+                                    if (!file_exists($file_path)) {
+                                        continue;
+                                    }
 
                                     $filename = basename($file_path);
                                     $filesize = filesize($file_path);
