@@ -30,6 +30,50 @@ function ai_chatbot_admin_panel() {
         'meta_key'       => '_ai_chatbot_uploaded', // optional flag you set when uploading
     ]);
 
+    $pages = ai_chatbot_get_pages();
+    $page_uploads = ai_chatbot_uploaded_pages();
+
+    foreach ($page_uploads as $upload)
+    {
+        $page_id = $upload["page_id"];
+        error_log(print_r($page_id, true));
+        if (isset($pages[$page_id]))
+        {
+            $pages[$page_id]['status'] = 1;
+        }
+        else
+        {
+            $pages[$page_id]['title']  = '';
+            $pages[$page_id]['url']    = '';
+            $pages[$page_id]['status'] = -1;    
+        }
+    }
+
+    /* for testing
+    $data = [];
+    $chunks = ai_chatbot_chunk_text("Some information about the website: You can view our nursing homes via virtual tours and floor plans on our website. Physical guided tours can be booked online (max 2 people, including the future resident). Mention it in the comments if you want to view a couple's room.");
+    foreach ($chunks as $chunk) {
+        $result = ai_chatbot_send_to_openai_embeddings($chunk);
+        if ($result['success']) 
+        {
+            $data[] = [
+                'text' => $chunk,
+                'embedding' => $result['embedding']
+            ];
+        }
+    }
+
+    foreach ($data as $embedding) {
+        if ($embedding) {
+            $result = ai_chatbot_send_to_qdrant(
+                $embedding['embedding'],
+                $embedding['text'],
+                "page_3"
+            );
+        }
+    }
+    */
+
     $qdrant_url         = get_option('ba_qdrant_url');
     $qdrant_api         = get_option('ba_qdrant_api_key');
     $gpt_api            = get_option('ba_gpt_api_key');
@@ -86,12 +130,12 @@ function ai_chatbot_admin_panel() {
                 </div>
                 <div id="fileTableWrap" class="rounded-xl b-2">
                     <div id="tableCard">
-                        <table class="ba-chatbot-file-table">
+                        <table class="bac-table">
                             <thead>
                                 <tr class="hide-columns">
                                     <th>File Name</th>
-                                    <th class="ba-chatbot-col-size">Size</th>
-                                    <th class="ba-chatbot-col-status">Status</th>
+                                    <th class="bac-col-medium-collapse hide-smallest">Size</th>
+                                    <th class="bac-col-medium-collapse">Status</th>
                                     <th class="ba-chatbot-col-actions"></th>
                                 </tr>
                             </thead>
@@ -126,14 +170,16 @@ function ai_chatbot_admin_panel() {
                                             </div>
                                         </td>
 
-                                        <td class="ba-chatbot-col-size">
+                                        <td class="bac-col-medium-collapse hide-smallest">
                                             <?php echo esc_html($formatted_size); ?>
                                         </td>
 
-                                        <td class="ba-chatbot-col-status">
-                                            <span class="ba-chatbot-<?php echo esc_attr($badgeClass); ?>">
-                                                <?php echo esc_html($badgeText); ?>
-                                            </span>
+                                        <td class="bac-col-medium-collapse">
+                                            <div class="ba-chatbot-badge ba-chatbot-<?php echo esc_attr($badgeClass); ?>">
+                                                <p>
+                                                    <?php echo esc_html($badgeText); ?>
+                                                </p>
+                                            </div>  
                                         </td>
 
                                         <td class="ba-chatbot-col-actions">
@@ -152,6 +198,95 @@ function ai_chatbot_admin_panel() {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                        <div class="bac-table-footer">
+                            Add files to the chatbot's knowledge base.
+                        </div>
+                    </div>
+                </div>
+                <div id="pageTableWrap" class="rounded-xl b-2">
+                    <div id="pageCard">
+                        <table class="bac-table">
+                            <thead>
+                                <tr class="hide-columns">
+                                    <th>Page Name</th>
+                                    <th class="bac-col-small hide-small">Url</th>
+                                    <th class="bac-col-small-collapse">Actions</th>
+                                    <th class="bac-col-medium-collapse hide-smallest">Status</th>
+                                    <th class="ba-chatbot-col-actions"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="pageTableBody">
+                                <?php foreach ($pages as $page_id => $data) : 
+                                    $filename = $data['title'];
+
+                                    $badgeClass = 'badge-success';
+                                    $badgeText = 'Uploaded';
+
+                                    if ($data['status'] == 0)
+                                    {
+                                        $badgeClass = 'badge-pending';
+                                        $badgeText = 'Not uploaded';
+                                    }
+                                    else if ($data['status'] == 1)
+                                    {
+                                        $badgeClass = 'badge-success';
+                                        $badgeText = 'Uploaded';
+                                    }
+                                    else
+                                    {
+                                        $badgeClass = 'badge-failed';
+                                        $badgeText = 'Non existent';
+                                    }
+                                ?>
+                                    <tr class="hide-columns" id="ba-chatbot-page-element-<?= $page_id ?>">
+                                        <td>
+                                            <div class="ba-chatbot-file-name-cell">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                                                </svg>
+                                                <span><?php echo esc_html($filename); ?></span>
+                                            </div>
+                                        </td>
+
+                                        <td class="bac-col-small hide-small">
+                                            <?php if ($data['status'] != -1) : ?>
+                                            <a href="<?= $data['url'] ?>">link</a>
+                                            <?php endif; ?>
+                                        </td>
+
+                                        <td class="bac-col-small-collapse">
+                                            <input type="checkbox" onclick="addPage(this, '<?= $page_id ?>')" <?= $data['status'] == 1 ? 'checked' : ''?>>
+                                        </td>
+
+                                        <td class="bac-col-medium-collapse hide-smallest">
+                                            <div class="ba-chatbot-badge ba-chatbot-<?php echo esc_attr($badgeClass); ?>">
+                                                <p>
+                                                    <?php echo esc_html($badgeText); ?>
+                                                </p>
+                                            </div>  
+                                        </td>
+
+                                        <td class="ba-chatbot-col-actions">
+                                            <?php if ($data['status'] == -1) : ?>
+                                                <button 
+                                                    class="ba-chatbot-remove-btn"
+                                                    onclick="removePage('<?php echo esc_js($page_id); ?>')"
+                                                    aria-label="Remove <?php echo esc_attr($filename); ?>"
+                                                >
+                                                    <svg class="text-red-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                                                    </svg>
+                                                </button>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        <div class="bac-table-footer">
+                            Select pages to provide the chatbot with linkable content.
+                        </div>
                     </div>
                 </div>
             </div>

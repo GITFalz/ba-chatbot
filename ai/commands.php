@@ -285,6 +285,10 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
     ];
 }
 
+function ensure_utf8($string) {
+    return mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+}
+
 function ai_chatbot_ask_llm($question, $context_chunks) {
     $api_key = ba_decrypt(get_option("ba_gpt_api_key"));
     $email   = get_option("ba_bot_email");
@@ -342,17 +346,25 @@ You are given a list of pages from our website below (with title, URL and conten
         ]
     ];
 
+    error_log($context_text);
+
+    foreach ($messages as &$msg) {
+        $msg['content'] = ensure_utf8($msg['content']);
+    }
+
+    $body = json_encode([
+        'model'       => 'gpt-4o-mini',
+        'messages'    => $messages,
+        'temperature' => 0.3
+    ]);
+
     // Recommended: Switch to a better model (much better at following instructions)
     $response = wp_remote_post('https://api.openai.com/v1/chat/completions', [
         'headers' => [
             'Content-Type'  => 'application/json',
             'Authorization' => 'Bearer ' . $api_key,
         ],
-        'body' => json_encode([
-            'model'       => 'gpt-4o-mini',     // ← Strongly recommended instead of gpt-3.5-turbo
-            'messages'    => $messages,
-            'temperature' => 0.3
-        ]),
+        'body' => $body,
         'timeout' => 25
     ]);
 

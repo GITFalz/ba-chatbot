@@ -120,16 +120,19 @@ add_action('wp_enqueue_scripts', function() {
     }
 });
 
-function get_all_pages_for_chatbot($max_pages = 40, $chars_per_page = 1200) {
+function get_relevant_pages_for_chatbot($question, $max_pages = 40, $chars_per_page = 1200, $limit = 5) {
     
     $context_chunks = [];
+    $scored_pages = [];
+
+    // Normalize question
+    $question = strtolower($question);
+    $words = array_filter(explode(' ', preg_replace('/[^a-z0-9 ]/i', '', $question)));
 
     $args = array(
         'post_type'      => ['page', 'post'],
         'post_status'    => 'publish',
         'posts_per_page' => $max_pages,
-        'orderby'        => 'menu_order',
-        'order'          => 'ASC',
         'no_found_rows'  => true,
         'update_post_meta_cache' => false,
         'update_post_term_cache' => false,
@@ -141,17 +144,55 @@ function get_all_pages_for_chatbot($max_pages = 40, $chars_per_page = 1200) {
         while ($query->have_posts()) {
             $query->the_post();
             
-            $title   = get_the_title();
+            $title   = strtolower(get_the_title());
             $url     = get_permalink();
-            $content = wp_strip_all_tags(get_the_content());
-            
-            // Clean and limit content per page
-            $content = preg_replace('/\s+/', ' ', $content);   // normalize whitespace
-            $content = substr(trim($content), 0, $chars_per_page);
+            $content = strtolower(wp_strip_all_tags(get_the_content()));
+            $content = preg_replace('/\s+/', ' ', $content);
 
-            $context_chunks[] = "Page Title: {$title}\nURL: {$url}\nContent:\n{$content}";
+            $score += 0; // start
+
+            foreach ($words as $word) {
+                $title_words = explode(' ', $title);
+                foreach ($title_words as $tw) {
+                    if (levenshtein($word, $tw) <= 2) {
+                        $score += 5;
+                    }
+                }
+
+                $content_words = explode(' ', $content);
+                foreach ($content_words as $cw) {
+                    if (levenshtein($word, $cw) <= 2) {
+                        $score += 1;
+                    }
+                }
+            }
+
+            if (strpos($content, $question) !== false) {
+                $score += 10;
+            }
+
+            if ($score > 0) {
+                $short_content = substr(trim($content), 0, $chars_per_page);
+
+                $scored_pages[] = [
+                    'score'   => $score,
+                    'title'   => get_the_title(),
+                    'url'     => $url,
+                    'content' => $short_content
+                ];
+            }
         }
         wp_reset_postdata();
+    }
+
+    usort($scored_pages, function($a, $b) {
+        return $b['score'] <=> $a['score'];
+    });
+
+    $top_pages = array_slice($scored_pages, 0, $limit);
+
+    foreach ($top_pages as $page) {
+        $context_chunks[] = "Page Title: {$page['title']}\nURL: {$page['url']}\nContent:\n{$page['content']}";
     }
 
     return $context_chunks;
@@ -181,7 +222,7 @@ function ai_chatbot_search_handler() {
     }
     
     // Extract context chunks
-    $context_chunks = get_all_pages_for_chatbot();
+    $context_chunks = [];
     foreach ($results['data']['result'] as $point) {
         if (isset($point['payload']['text'])) {
             $context_chunks[] = $point['payload']['text'];
@@ -682,3 +723,112 @@ function ba_chatbot_get_translated_text_handler()
     wp_send_json_success(['message' => 'Success']);
 }
 add_action('wp_ajax_get_translated_text', 'ba_chatbot_get_translated_text_handler');
+
+
+
+function ba_chatbot_delete_non_existent_page_handler()
+{
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+
+    if (!isset($_POST['ai_chatbot_delete_page'])) {
+        wp_send_json_error(['message' => 'No file uploaded.']);
+        wp_die();
+    }
+
+    $page_id = sanitize_file_name($_POST['ai_chatbot_delete_page']);
+    $result = ai_chatbot_delete_qdrant_document("page_" . $page_id);
+
+    if (!$result['success']) {
+        wp_send_json_error(['message' => 'Failed to delete page ' . $page_id . ", for reason: " . $result['message']]);
+        wp_die();
+    }
+
+    ai_chatbot_remove_page($page_id);
+
+    wp_send_json_success(['message' => $page_id . ' deleted successfully.']);
+    wp_die();
+}
+add_action('wp_ajax_delete_non_existent_page', 'ba_chatbot_delete_non_existent_page_handler');
+
+function ba_chatbot_upload_page_handler()
+{
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+
+    if (!isset($_POST['ai_chatbot_page_id'])) {
+        wp_send_json_error(['message' => 'No file uploaded.']);
+        wp_die();
+    }  
+
+    $upload = isset($_POST['ai_chatbot_upload']) ? $_POST['ai_chatbot_upload'] === "true" : false;
+    $page_id = sanitize_file_name($_POST['ai_chatbot_page_id']);
+    
+    if ($upload)
+    {
+        $result = ai_chatbot_get_page(intval($page_id));
+
+        if (!$result) {
+            wp_send_json_error(['message' => 'Failed to delete page ' . $page_id . ", for reason: " . $result['message']]);
+            wp_die();
+        }
+        
+        $page = get_post($page_id);
+    
+        $content = "";
+        if ($page && $page->post_type === 'page') {
+            $content = apply_filters('the_content', $page->post_content);
+        }
+
+        $data = [];
+        $chunks = ai_chatbot_chunk_text("Page Name: " . $result['title'] . "\nPage Url: " . $result['url'] . "\nPage Content: " . $content);
+        if (!empty($chunks))
+        {
+            $result = ai_chatbot_send_to_openai_embeddings($chunks[0]);
+            if ($result['success']) 
+            {
+                $data[] = [
+                    'text' => $chunks[0],
+                    'embedding' => $result['embedding']
+                ];
+            }
+        }
+
+        $result = [];
+        foreach ($data as $embedding) {
+            if ($embedding) {
+                $result = ai_chatbot_send_to_qdrant(
+                    $embedding['embedding'],
+                    $embedding['text'],
+                    "page_" . $page_id
+                );
+            }
+        }
+
+        if (!$result['success']) {
+            wp_send_json_error(['message' => 'Failed to add page ' . $page_id . ", for reason: " . $result['message']]);
+            wp_die();
+        }
+
+        ai_chatbot_store_page(intval($page_id));
+    }
+    else
+    {
+        $result = ai_chatbot_delete_qdrant_document("page_" . $page_id);
+
+        if (!$result['success']) {
+            wp_send_json_error(['message' => 'Failed to delete page ' . $page_id . ", for reason: " . $result['message']]);
+            wp_die();
+        }
+
+        ai_chatbot_remove_page(intval($page_id));
+    }
+
+    wp_send_json_success(['message' => $page_id . ' changed successfully.', 'uploaded' => $upload]);
+    wp_die();
+}
+add_action('wp_ajax_upload_page', 'ba_chatbot_upload_page_handler');

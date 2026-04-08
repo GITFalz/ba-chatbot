@@ -239,16 +239,31 @@ jQuery(document).ready(function($)
         let badgeClass = "badge-success";
         let badgeText = "Uploaded";
 
-        return '<tr class="hide-columns" id="ba-chatbot-element-' + data.id + '"><td><div class="ba-chatbot-file-name-cell">'
-        + '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>'
-        + '<span>' + fileName + '</span>'
-        + '</div></td>'
-        + '<td class="ba-chatbot-col-size">' + formatSize(data.size) + '</td>'
-        + '<td class="ba-chatbot-col-status"><span class="ba-chatbot-' + badgeClass + '">' + badgeText + '</span></td>'
-        + '<td class="ba-chatbot-col-actions"><button class="ba-chatbot-remove-btn" onclick="removeFile(\'' + data.id + '\')" aria-label="Remove ' + data.name + '">'
-        + '<svg class="text-red-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>'
-        + '</button></td>'
-        + '</tr>';
+        return `
+<tr class="hide-columns" id="ba-chatbot-element-${data.id}">
+    <td>
+        <div class="ba-chatbot-file-name-cell">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            <span>${fileName}</span>
+        </div>
+    </td>
+    <td class="bac-col-medium-collapse hide-smallest">
+        ${formatSize(data.size)}
+    </td>
+    <td class="bac-col-medium-collapse">
+        <div class="ba-chatbot-badge ba-chatbot-${badgeClass}">
+            <p>
+                ${badgeText}
+            </p>
+        </div>  
+    </td>
+    <td class="ba-chatbot-col-actions">
+        <button class="ba-chatbot-remove-btn" onclick="removeFile(\'${data.id}\')" aria-label="Remove ${data.name}">
+            <svg class="text-red-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+        </button>
+    </td>
+</tr>
+`;
     }
 
     function getResultItemElement(data)
@@ -490,6 +505,22 @@ function deleteItemElement(id)
     }
 }
 
+function setBadge(element, className, text)
+{
+    let badge = element.querySelector('.ba-chatbot-badge');
+    if (badge)
+    {
+        let s = badge.querySelector('p');
+        if (s)
+        {
+            badge.classList.value = "";
+            badge.classList.add("ba-chatbot-badge");
+            badge.classList.add("ba-chatbot-badge-" + className);
+            s.textContent = text;
+        }
+    }
+}
+
 function removeFile(id)
 {
     let element = document.getElementById('ba-chatbot-element-' + id);
@@ -499,18 +530,7 @@ function removeFile(id)
         return;
     }
 
-    let td = element.querySelector('td.ba-chatbot-col-status');
-    if (td)
-    {
-        let s = td.querySelector('span');
-        if (s)
-        {
-            s.classList.remove('ba-chatbot-badge-failed');
-            s.classList.remove('ba-chatbot-badge-success');
-            s.classList.add('ba-chatbot-badge-deleting');
-            s.textContent = "Deleting";
-        }
-    }
+    setBadge(element, "deleting", "Deleting");
 
     let span = element.querySelector('span');
     if (!span)
@@ -536,16 +556,79 @@ function removeFile(id)
             element.remove();
         } else { 
             console.error('Deletion error:', res.data.message);
-            if (td)
-            {
-                let s = td.querySelector('span');
-                if (s)
-                {   
-                    s.classList.remove('ba-chatbot-badge-deleting');
-                    s.classList.add('ba-chatbot-badge-failed'); 
-                    s.textContent = "Fail";
-                }
-            }
+            setBadge(element, "failed", "Fail");
+        }
+    })
+    .catch(err => {
+        console.error('AJAX request failed:', err);
+    });
+}
+
+function addPage(checkbox, id)
+{
+    let element = document.getElementById('ba-chatbot-page-element-' + id);
+    if (!element)
+    {
+        console.error('No element found for file ' + id);
+        return;
+    }
+
+    setBadge(element, "processing", "Uploading");
+
+    const formData = new FormData();
+    formData.append('action', 'upload_page');
+    formData.append('ai_chatbot_page_id', id);
+    formData.append('ai_chatbot_upload', checkbox.checked ? "true" : "");
+    formData.append('ai_chatbot_nonce', AIChatbot.nonce);
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            if (res.data.uploaded)
+                setBadge(element, "success", "Uploaded");
+            else
+                setBadge(element, "pending", "Not uploaded");
+        } else { 
+            console.error('Uploading error:', res.data.message);
+            setBadge(element, "failed", "Fail");
+        }
+    })
+    .catch(err => {
+        console.error('AJAX request failed:', err);
+    });
+}
+
+function removePage(id)
+{
+    let element = document.getElementById('ba-chatbot-page-element-' + id);
+    if (!element)
+    {
+        console.error('No element found for file ' + id);
+        return;
+    }
+
+    setBadge(element, "deleting", "Deleting");
+
+    const formData = new FormData();
+    formData.append('action', 'delete_non_existent_page');
+    formData.append('ai_chatbot_delete_page', id);
+    formData.append('ai_chatbot_nonce', AIChatbot.nonce);
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            element.remove();
+        } else { 
+            console.error('Deletion error:', res.data.message);
+            setBadge(element, "failed", "Fail");
         }
     })
     .catch(err => {

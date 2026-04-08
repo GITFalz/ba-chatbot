@@ -4,12 +4,12 @@ function ai_chatbot_create_tables()
 {
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'ai_chat_messages';
     $charset_collate = $wpdb->get_charset_collate();
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-    $sql = "CREATE TABLE $table_name (
+    
+    $table_name_messages = $wpdb->prefix . 'ai_chat_messages';
+    $messages_sql = "CREATE TABLE $table_name_messages (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         message LONGTEXT NOT NULL,
         response LONGTEXT,
@@ -18,7 +18,19 @@ function ai_chatbot_create_tables()
         KEY created_at (created_at)
     ) $charset_collate;";
 
-    dbDelta($sql);
+    $table_name_pages = $wpdb->prefix . 'ai_chat_pages';
+    $posts_table = $wpdb->posts;
+    $pages_sql = "CREATE TABLE $table_name_pages (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        page_id BIGINT UNSIGNED,
+        PRIMARY KEY (id),
+        CONSTRAINT fk_page_id FOREIGN KEY (page_id)
+            REFERENCES wp_posts(ID)
+            ON DELETE SET NULL
+    ) $charset_collate;";
+
+    dbDelta($messages_sql);
+    dbDelta($pages_sql);
 }
 
 function ai_chatbot_store_question($question)
@@ -49,6 +61,115 @@ function ai_chatbot_store_question($question)
     }
 
     return $wpdb->insert_id;
+}
+
+function ai_chatbot_store_page($page_id)
+{
+    global $wpdb;
+
+    $table = $wpdb->prefix . 'ai_chat_pages';
+    $exists = $wpdb->get_var( $wpdb->prepare(
+        "SELECT COUNT(*) FROM $table WHERE page_id = %d",
+        $page_id
+    ));
+
+    if ($exists)
+        return false;
+
+    $inserted = $wpdb->insert(
+        $table,
+        [
+            'page_id' => $page_id
+        ],
+        [
+            '%d'
+        ]
+    );
+
+    if ($inserted === false) {
+        return false;
+    }
+
+    return $wpdb->insert_id;
+}
+
+function ai_chatbot_uploaded_pages()
+{
+    global $wpdb;
+
+    $table = $wpdb->prefix . 'ai_chat_pages';
+
+    return $wpdb->get_results(
+        "SELECT page_id
+         FROM $table",
+        ARRAY_A
+    );
+}
+
+function ai_chatbot_get_pages()
+{
+    global $wpdb;
+
+    $pages = $wpdb->get_results("
+        SELECT ID, post_title, post_name
+        FROM {$wpdb->posts}
+        WHERE post_type = 'page' AND post_status = 'publish'
+        ORDER BY post_title ASC
+    ", ARRAY_A);
+
+    $pages_array = [];
+    foreach ($pages as $page) {
+        $pages_array[ $page['ID'] ] = [
+            'title'  => $page['post_title'],
+            'url'    => get_permalink( $page['ID'] ),
+            'status' => 0
+        ];
+    }
+
+    return $pages_array;
+}
+
+function ai_chatbot_get_page($page_id) {
+    global $wpdb;
+
+    $page = $wpdb->get_row( $wpdb->prepare(
+        "
+        SELECT ID, post_title, post_name
+        FROM {$wpdb->posts}
+        WHERE ID = %d
+          AND post_type = 'page'
+          AND post_status = 'publish'
+        ",
+        $page_id
+    ), ARRAY_A );
+
+    if (!$page) {
+        return false;
+    }
+
+    return [
+        'title'  => $page['post_title'],
+        'url'    => get_permalink( $page['ID'] ),
+        'status' => 0
+    ];
+}
+
+function ai_chatbot_remove_page($id)
+{
+    global $wpdb;
+
+    $table = $wpdb->prefix . 'ai_chat_pages';
+    $deleted = $wpdb->delete(
+        $table,
+        [
+            'page_id' => $id
+        ],
+        [
+            '%d'
+        ]
+    );
+
+    return $deleted;
 }
 
 function ai_chatbot_set_response($question_id, $response)
