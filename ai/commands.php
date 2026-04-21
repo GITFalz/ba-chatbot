@@ -233,19 +233,19 @@ function guidv4($data = null) {
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
-function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
-
+function ai_chatbot_query_qdrant($query_vector, $top_k = 10) 
+{
     $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
     $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
     $qdrant_collection = get_option("ba_bot_qdrant_collection");
-
+    
     $url = $qdrant_url . '/collections/' . $qdrant_collection . '/points/search';
     $body = [
         'vector' => $query_vector,
         'top'    => $top_k,
         'with_payload' => true,
     ];
-
+    
     $response = wp_remote_post($url, [
         'headers' => [
             'Content-Type' => 'application/json',
@@ -253,15 +253,16 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
         ],
         'body' => json_encode($body),
     ]);
+
     if (is_wp_error($response)) {
         return [
-            'success' => true,
-            'data' => []
+            'success' => false,
+            'message' => $response->get_error_message(),
         ];
     }
 
     $status_code = wp_remote_retrieve_response_code($response);
-
+    
     if ($status_code < 200 || $status_code >= 300) {
         return [
             'success' => false,
@@ -271,7 +272,7 @@ function ai_chatbot_query_qdrant($query_vector, $top_k = 10) {
 
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
-
+    
     if (json_last_error() !== JSON_ERROR_NONE) {
         return [
             'success' => false,
@@ -324,14 +325,14 @@ Answer in a friendly and helpful tone. Always speak as 'we', 'our', or 'us'.
 
 You are given a list of pages from our website below (with title, URL and content).
 
-→ Use the information from these pages to answer the user's question.
-→ If the question is related to any of the pages (even if not exact word match), use the relevant information and include a helpful link.
-→ Only link to pages that are actually in the context. Never invent links.
-→ If you use information from a specific page, naturally include the link like this: 
+- Use the information from these pages to answer the user's question.
+- If the question is related to any of the pages (even if not exact word match), use the relevant information and include a helpful link.
+- Only link to pages that are actually in the context. Never invent links.
+- If you use information from a specific page, naturally include the link like this: 
   \"... You can read more about this on our <a href=\"https://example.com/page\">Information page</a>.\"
-→ If nothing in the pages is relevant at all, then say you don't have that information and offer to help with something else or suggest contacting us.
+- If nothing in the pages is relevant at all, then say you don't have that information and offer to help with something else or suggest contacting us.
 
-→ Always respond in the same language as the user's question.";
+- Always respond in the same language as the user's question.";
 
     $system_prompt .= "\n\n" . $contact_text . "\n" . $speech_instruction;
 
