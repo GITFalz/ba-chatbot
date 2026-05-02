@@ -231,9 +231,14 @@ function ai_chatbot_search_handler() {
 
     if (empty($context_chunks))
         $context_chunks = ["Context: (none)"];
+
+    $pages = get_relevant_pages_for_chatbot($question);
+    foreach ($pages as $page) {
+        $context_chunks[] = $page;
+    }
     
     // Ask LLM
-    $answer = ai_chatbot_ask_llm($question, context_chunks: $context_chunks);
+    $answer = ai_chatbot_ask_llm($question, $context_chunks);
     if (!$answer) {
         ai_chatbot_set_response($question_id, 'Geen antwoord gevonden.');
         wp_send_json_error('LLM failed to generate an answer.');
