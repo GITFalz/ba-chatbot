@@ -338,6 +338,7 @@ function ai_qdrant_set_payload($ids, $type) {
 function ai_qdrant_are_pages_valid()
 {
     $page_set = ai_chatbot_get_pages_lookup();
+    $ai_page_set = ai_chatbot_get_ai_chat_pages_lookup();
 
     $offset = null;
 
@@ -352,7 +353,7 @@ function ai_qdrant_are_pages_valid()
 
             $post_id = (int) str_replace('page_', '', $document_id);
 
-            if (!isset($page_set[$post_id])) {
+            if (!isset($page_set[$post_id]) || !isset($ai_page_set[$post_id])) {
                 return false;
             }
         }
@@ -432,6 +433,7 @@ add_action('wp_ajax_qdrant_update_type', 'ai_update_qdrant_type');
 function ai_cleanup_qdrant_pages() {
 
     $page_set = ai_chatbot_get_pages_lookup();
+    $ai_page_set = ai_chatbot_get_ai_chat_pages_lookup();
 
     $offset = null;
     $to_delete = [];
@@ -447,8 +449,8 @@ function ai_cleanup_qdrant_pages() {
 
             $post_id = (int) str_replace('page_', '', $document_id);
 
-            if (!isset($page_set[$post_id])) {
-                $to_delete[] = $point['id'];
+            if (!isset($page_set[$post_id]) || !isset($ai_page_set[$post_id])) {
+                return false;
             }
         }
 

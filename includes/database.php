@@ -147,6 +147,25 @@ function ai_chatbot_get_pages_lookup() {
     return $page_set;
 }
 
+function ai_chatbot_get_ai_chat_pages_lookup() {
+    global $wpdb;
+
+    $table = $wpdb->prefix . "ai_chat_pages";
+
+    $rows = $wpdb->get_results("
+        SELECT page_id
+        FROM {$table}
+    ", ARRAY_A);
+
+    $page_set = [];
+
+    foreach ($rows as $row) {
+        $page_set[(int)$row['page_id']] = true;
+    }
+
+    return $page_set;
+}
+
 function ai_chatbot_get_page($page_id) {
     global $wpdb;
 
