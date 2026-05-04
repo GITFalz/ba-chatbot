@@ -255,8 +255,8 @@ function ai_chatbot_admin_panel() {
                                 <tr class="hide-columns">
                                     <th>Page Name</th>
                                     <th class="bac-col-small hide-small">Url</th>
-                                    <th class="bac-col-small-collapse">Actions</th>
-                                    <th class="bac-col-medium-collapse hide-smallest">Status</th>
+                                    <th class="bac-col-small-collapse">Save</th>
+                                    <th class="bac-col-large-collapse hide-smallest">Status</th>
                                     <th class="ba-chatbot-col-actions"></th>
                                 </tr>
                             </thead>
@@ -303,7 +303,7 @@ function ai_chatbot_admin_panel() {
                                             <input type="checkbox" onclick="addPage(this, '<?= $page_id ?>')" <?= $data['status'] == 1 ? 'checked' : ''?>>
                                         </td>
 
-                                        <td class="bac-col-medium-collapse hide-smallest">
+                                        <td class="bac-col-large-collapse hide-smallest">
                                             <div class="ba-chatbot-badge ba-chatbot-<?php echo esc_attr($badgeClass); ?>">
                                                 <p>
                                                     <?php echo esc_html($badgeText); ?>
