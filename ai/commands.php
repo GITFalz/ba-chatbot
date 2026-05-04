@@ -159,7 +159,7 @@ function ai_chatbot_send_to_openai_embeddings($chunk) {
     ];
 }
 
-function ai_chatbot_send_to_qdrant($vector, $chunk, $document_id) {
+function ai_chatbot_send_to_qdrant($vector, $chunk, $document_id, $type) {
 
     $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
     $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
@@ -172,6 +172,7 @@ function ai_chatbot_send_to_qdrant($vector, $chunk, $document_id) {
             'vector' => $vector,
             'payload' => [
                 'document_id' => $document_id,
+                'type' => $type,
                 'text' => $chunk
             ]
         ]]
@@ -218,6 +219,249 @@ function ai_chatbot_send_to_qdrant($vector, $chunk, $document_id) {
         'data' => $data,
     ];
 }
+
+
+function ai_qdrant_scroll($offset = null) {
+    $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
+    $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
+    $collection = get_option("ba_bot_qdrant_collection");
+
+    $url = $qdrant_url . '/collections/' . $collection . '/points/scroll';
+
+    $body = [
+        'limit' => 100,
+        'with_payload' => ['document_id'],
+        'with_vectors' => false,
+    ];
+
+    if ($offset !== null) {
+        $body['offset'] = $offset;
+    }
+
+    $response = wp_remote_post($url, [
+        'body' => json_encode($body),
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'api-key' => $qdrant_api,
+        ]
+    ]);
+
+    return json_decode(wp_remote_retrieve_body($response), true);
+}
+
+function ai_qdrant_scroll_by_type($type, $offset = null) {
+    $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
+    $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
+    $collection = get_option("ba_bot_qdrant_collection");
+    $url = $qdrant_url . '/collections/' . $collection . '/points/scroll';
+
+    $body = [
+        'limit' => 100,
+        'with_payload' => true,
+        'with_vectors' => false,
+        'filter' => [
+            'must' => [
+                [
+                    'key' => 'type',
+                    'match' => [
+                        'value' => $type
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    if ($offset !== null) {
+        $body['offset'] = $offset;
+    }
+
+    error_log("[QDRANT SCROLL BY TYPE] Querying type: '{$type}'");
+    error_log("[QDRANT SCROLL BY TYPE] URL: " . $url);
+    error_log("[QDRANT SCROLL BY TYPE] Full body: " . json_encode($body));
+
+    $response = wp_remote_post($url, [
+        'body' => json_encode($body),
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'api-key' => $qdrant_api,
+        ]
+    ]);
+
+    if (is_wp_error($response)) {
+        error_log("[QDRANT SCROLL BY TYPE] WP_Error: " . $response->get_error_message());
+        return null;
+    }
+
+    $http_code = wp_remote_retrieve_response_code($response);
+    $raw_body = wp_remote_retrieve_body($response);
+
+    error_log("[QDRANT SCROLL BY TYPE] HTTP code: " . $http_code);
+    error_log("[QDRANT SCROLL BY TYPE] Raw response: " . $raw_body);
+
+    $decoded = json_decode($raw_body, true);
+    error_log("[QDRANT SCROLL BY TYPE] Points returned: " . count($decoded['result']['points'] ?? []));
+
+    // Dump the first point raw so we can see the actual payload structure
+    if (!empty($decoded['result']['points'])) {
+        error_log("[QDRANT SCROLL BY TYPE] First point sample: " . json_encode($decoded['result']['points'][0]));
+    }
+
+    return $decoded;
+}
+
+
+function ai_qdrant_set_payload($ids, $type) {
+    if (empty($ids)) return;
+
+    $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
+    $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
+    $collection = get_option("ba_bot_qdrant_collection");
+
+    $url = $qdrant_url . '/collections/' . $collection . '/points/payload';
+
+    $body = [
+        'payload' => [
+            'type' => $type
+        ],
+        'points' => $ids
+    ];
+
+    wp_remote_post($url, [
+        'body' => json_encode($body),
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'api-key' => $qdrant_api,
+        ]
+    ]);
+}
+
+function ai_qdrant_are_pages_valid()
+{
+    $page_set = ai_chatbot_get_pages_lookup();
+
+    $offset = null;
+
+    do {
+        $res = ai_qdrant_scroll_by_type('page', $offset);
+        $points = $res['result']['points'] ?? [];
+
+        foreach ($points as $point) {
+
+            $document_id = $point['payload']['document_id'] ?? null;
+            if (!$document_id) continue;
+
+            $post_id = (int) str_replace('page_', '', $document_id);
+
+            if (!isset($page_set[$post_id])) {
+                return false;
+            }
+        }
+
+        $offset = $res['result']['next_page_offset'] ?? null;
+
+    } while ($offset !== null);
+
+    return true;
+}
+
+function ai_qdrant_delete_points($ids) {
+    $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
+    $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
+    $collection = get_option("ba_bot_qdrant_collection");
+    $url = $qdrant_url . '/collections/' . $collection . '/points/delete';
+
+    $body = ['points' => $ids];
+
+    $response = wp_remote_post($url, [
+        'method'  => 'POST',
+        'body'    => json_encode($body),
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'api-key'      => $qdrant_api,
+        ]
+    ]);
+
+    return [
+        "response" => $response
+    ];
+}
+
+
+
+function ai_update_qdrant_type_for($points, $start, $type)
+{
+    $ids = [];
+    foreach ($points as $point) {
+        if (str_starts_with($point['payload']['document_id'] ?? "", $start)) {
+            $ids[] = $point['id'];
+        }
+    }
+
+    ai_qdrant_set_payload($ids, $type);
+}
+
+function ai_update_qdrant_type() {
+    $status = get_option("ba_payload_update_status", "not_started");
+
+    if ($status === "done" || $status === "running") {
+        return;
+    }
+
+    update_option("ba_payload_update_status", "running");
+
+    $offset = null;
+
+    do {
+        $res = ai_qdrant_scroll($offset);
+
+        $points = $res['result']['points'] ?? [];
+
+        ai_update_qdrant_type_for($points, "page_", "page");
+        ai_update_qdrant_type_for($points, "file_", "file");
+
+        $offset = $res['result']['next_page_offset'] ?? null;
+
+    } while ($offset !== null);
+
+    ai_chatbot_create_qdrant_type_index();
+
+    update_option("ba_payload_update_status", "done");
+}
+add_action('wp_ajax_qdrant_update_type', 'ai_update_qdrant_type');
+
+function ai_cleanup_qdrant_pages() {
+
+    $page_set = ai_chatbot_get_pages_lookup();
+
+    $offset = null;
+    $to_delete = [];
+
+    do {
+        $res = ai_qdrant_scroll_by_type('page', $offset);
+        $points = $res['result']['points'] ?? [];
+
+        foreach ($points as $point) {
+
+            $document_id = $point['payload']['document_id'] ?? null;
+            if (!$document_id) continue;
+
+            $post_id = (int) str_replace('page_', '', $document_id);
+
+            if (!isset($page_set[$post_id])) {
+                $to_delete[] = $point['id'];
+            }
+        }
+
+        $offset = $res['result']['next_page_offset'] ?? null;
+
+    } while ($offset !== null);
+
+    if (!empty($to_delete)) {
+        ai_qdrant_delete_points($to_delete);
+    }
+}
+add_action('wp_ajax_cleanup_qdrant_pages', 'ai_cleanup_qdrant_pages');
+
 
 function guidv4($data = null) {
     // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
@@ -397,6 +641,27 @@ function ai_chatbot_create_qdrant_payload_index() {
             'api-key'      => $qdrant_api,
         ],
         'body' => json_encode($body),
+    ]);
+
+    return json_decode(wp_remote_retrieve_body($response), true);
+}
+
+function ai_chatbot_create_qdrant_type_index() {
+    $qdrant_url = ba_decrypt(get_option("ba_qdrant_url"));
+    $qdrant_api = ba_decrypt(get_option("ba_qdrant_api_key"));
+    $collection = get_option("ba_bot_qdrant_collection");
+    $url = $qdrant_url . '/collections/' . $collection . '/index';
+
+    $response = wp_remote_request($url, [
+        'method' => 'PUT',
+        'body' => json_encode([
+            'field_name'   => 'type',
+            'field_schema' => 'keyword'
+        ]),
+        'headers' => [
+            'Content-Type' => 'application/json',
+            'api-key'      => $qdrant_api,
+        ]
     ]);
 
     return json_decode(wp_remote_retrieve_body($response), true);

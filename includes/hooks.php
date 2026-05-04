@@ -395,7 +395,8 @@ function ai_chatbot_upload_file_handler()
                 $result = ai_chatbot_send_to_qdrant(
                     $embedding['embedding'],
                     $embedding['text'],
-                    $document_id
+                    $document_id,
+                    'file'
                 );
 
                 if (!$result['success'])
@@ -804,7 +805,8 @@ function ba_chatbot_upload_page_handler()
                 $result = ai_chatbot_send_to_qdrant(
                     $embedding['embedding'],
                     $embedding['text'],
-                    "page_" . $page_id
+                    "page_" . $page_id,
+                    'page'
                 );
             }
         }

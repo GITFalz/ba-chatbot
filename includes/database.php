@@ -129,6 +129,24 @@ function ai_chatbot_get_pages()
     return $pages_array;
 }
 
+function ai_chatbot_get_pages_lookup() {
+    global $wpdb;
+
+    $pages = $wpdb->get_results("
+        SELECT ID
+        FROM {$wpdb->posts}
+        WHERE post_type = 'page' AND post_status = 'publish'
+    ", ARRAY_A);
+
+    $page_set = [];
+
+    foreach ($pages as $page) {
+        $page_set[(int)$page['ID']] = true;
+    }
+
+    return $page_set;
+}
+
 function ai_chatbot_get_page($page_id) {
     global $wpdb;
 

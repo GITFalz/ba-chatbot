@@ -36,7 +36,6 @@ function ai_chatbot_admin_panel() {
     foreach ($page_uploads as $upload)
     {
         $page_id = $upload["page_id"];
-        error_log(print_r($page_id, true));
         if (isset($pages[$page_id]))
         {
             $pages[$page_id]['status'] = 1;
@@ -89,6 +88,7 @@ function ai_chatbot_admin_panel() {
 
     $pfp_img_url        = get_option('ba_bot_icon_url');
 
+    $status = get_option("ba_payload_update_status", "not_started");
     ?>
 <script>
     const theme = localStorage.getItem("ba_theme");
@@ -115,6 +115,50 @@ function ai_chatbot_admin_panel() {
         </label>
         
     </div>
+    <?php if ($status !== "done" && $status !== "running"): ?>
+        <script>
+            function updateTypes() {
+                const btn = document.getElementById("update_now_button");
+                btn.innerText = "Updating...";
+                btn.disabled = true;
+
+                let formData = new FormData();
+                formData.append('action', 'qdrant_update_type');
+
+                fetch(AIChatbot.ajaxurl, {
+                    method: 'POST',
+                    body: formData
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        </script>
+        <button id="update_now_button" class="ba-chatbot-important-btn text-white" style="margin-bottom: 10px; margin-top: 0px !important" onclick="updateTypes()">
+            Fix Data Structure!
+        </button>
+    <?php endif; ?>
+    <?php if ($status === "done" && !ai_qdrant_are_pages_valid()): ?>
+        <script>
+            function removePages() {
+                const btn = document.getElementById("remove_now_button");
+                btn.innerText = "Removing...";
+                btn.disabled = true;
+
+                let formData = new FormData();
+                formData.append('action', 'cleanup_qdrant_pages');
+
+                fetch(AIChatbot.ajaxurl, {
+                    method: 'POST',
+                    body: formData
+                }).then(() => {
+                    location.reload();
+                });
+            }
+        </script>
+        <button id="remove_now_button" class="ba-chatbot-important-btn text-white" style="margin-bottom: 10px; margin-top: 0px !important" onclick="removePages()">
+            Remove Outdated Pages!
+        </button>
+    <?php endif; ?>
     <div class="ba-chatbot-main-grid">
         <div class="ba-chatbot-files-panel">
             <div class="ba-chatbot-left-col">

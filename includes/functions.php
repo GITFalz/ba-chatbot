@@ -30,4 +30,5 @@ function ai_chatbot_run_updates($installed)
 {
     ai_chatbot_create_qdrant_payload_index();
     ai_chatbot_create_tables();
+    ai_update_qdrant_type();
 }
