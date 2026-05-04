@@ -357,7 +357,7 @@ function ai_qdrant_are_pages_valid()
                 return [
                     "success" => false,
                     "post_id" => $post_id,
-                    "fail_state" => "".isset($page_set[$post_id]) . " " . isset($ai_page_set[$post_id])
+                    "fail_state" => "" . (isset($page_set[$post_id]) ? "true" : "false") . " " . (isset($ai_page_set[$post_id]) ? "true" : "false")
                 ];
             }
         }
