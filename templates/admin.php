@@ -97,6 +97,15 @@ function ai_chatbot_admin_panel() {
         document.body.classList.add("light-theme");
     }
 </script>
+<div>
+    <p>(Developper debug)</p>
+    <?php foreach (ai_chatbot_uploaded_pages() as $page): ?>
+        <div>
+            <h1><?=$page["id"]?></h1>
+            <p><?=$page["page_id"]?></p>
+        </div>
+    <?php endforeach; ?>
+</div>
 <div id="ba-chatbot-admin-panel" class="ba-chatbot-main ba-chatbot-admin-wrap">
     <div class="ba-chatbot-page-header just-between">
         <div class="flex row just-center items-center gap-4">
