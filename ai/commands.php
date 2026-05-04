@@ -450,7 +450,7 @@ function ai_cleanup_qdrant_pages() {
             $post_id = (int) str_replace('page_', '', $document_id);
 
             if (!isset($page_set[$post_id]) || !isset($ai_page_set[$post_id])) {
-                return false;
+                $to_delete[] = $point['id'];
             }
         }
 
