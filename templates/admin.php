@@ -260,7 +260,7 @@ function ai_chatbot_admin_panel() {
                                     <th class="ba-chatbot-col-actions"></th>
                                 </tr>
                             </thead>
-                            <tbody id="pageTableBody">
+                            <tbody id="pageTableBody" class="scroll-body">
                                 <?php foreach ($pages as $page_id => $data) : 
                                     $filename = $data['title'];
 
