@@ -74,7 +74,10 @@ function ai_chatbot_store_page($page_id)
     ));
 
     if ($exists)
-        return false;
+        return [
+            "success" => false,
+            "reason" => "ID already exists in the database"
+        ];
 
     $inserted = $wpdb->insert(
         $table,
@@ -87,10 +90,16 @@ function ai_chatbot_store_page($page_id)
     );
 
     if ($inserted === false) {
-        return false;
+        return [
+            "success" => false,
+            "reason" => "Failed to insert the ID"
+        ];
     }
 
-    return $wpdb->insert_id;
+    return [
+        "success" => true,
+        "id" => $wpdb->insert_id
+    ];
 }
 
 function ai_chatbot_uploaded_pages()

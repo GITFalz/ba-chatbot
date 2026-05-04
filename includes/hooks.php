@@ -816,8 +816,9 @@ function ba_chatbot_upload_page_handler()
             wp_die();
         }
 
-        if (!ai_chatbot_store_page(intval($page_id))) {
-            wp_send_json_error(['message' => 'Failed to add page ' . $page_id . ", for reason: It already exists in the database"]);
+        $insertResult = ai_chatbot_store_page(intval($page_id));
+        if (!$insertResult["success"]) {
+            wp_send_json_error(['message' => 'Failed to add page ' . $page_id . ", for reason: " . $insertResult["reason"]]);
             wp_die();
         }
     }
