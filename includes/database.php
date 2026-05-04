@@ -24,9 +24,7 @@ function ai_chatbot_create_tables()
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         page_id BIGINT UNSIGNED,
         PRIMARY KEY (id),
-        CONSTRAINT fk_page_id FOREIGN KEY (page_id)
-            REFERENCES wp_posts(ID)
-            ON DELETE SET NULL
+        KEY page_id (page_id)
     ) $charset_collate;";
 
     dbDelta($messages_sql);
