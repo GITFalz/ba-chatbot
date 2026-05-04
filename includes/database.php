@@ -92,7 +92,8 @@ function ai_chatbot_store_page($page_id)
     if ($inserted === false) {
         return [
             "success" => false,
-            "reason" => "Failed to insert the ID"
+            "reason" => $wpdb->last_error,
+            "query" => $wpdb->last_query
         ];
     }
 
