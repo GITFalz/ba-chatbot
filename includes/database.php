@@ -146,7 +146,8 @@ function ai_chatbot_get_pages_lookup() {
     $pages = $wpdb->get_results("
         SELECT ID
         FROM {$wpdb->posts}
-        WHERE post_type = 'page' AND post_status = 'publish'
+        WHERE post_status = 'publish'
+        AND post_type NOT IN ('revision', 'nav_menu_item', 'attachment')
     ", ARRAY_A);
 
     $page_set = [];
@@ -185,8 +186,8 @@ function ai_chatbot_get_page($page_id) {
         SELECT ID, post_title, post_name
         FROM {$wpdb->posts}
         WHERE ID = %d
-          AND post_type = 'page'
-          AND post_status = 'publish'
+        AND post_status = 'publish'
+        AND post_type NOT IN ('revision', 'nav_menu_item', 'attachment')
         ",
         $page_id
     ), ARRAY_A );
