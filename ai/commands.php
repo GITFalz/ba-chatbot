@@ -354,7 +354,11 @@ function ai_qdrant_are_pages_valid()
             $post_id = (int) str_replace('page_', '', $document_id);
 
             if (!isset($page_set[$post_id]) || !isset($ai_page_set[$post_id])) {
-                return false;
+                return [
+                    "success" => false,
+                    "post_id" => $post_id,
+                    "fail_state" => "".isset($page_set[$post_id]) . " " . isset($ai_page_set[$post_id])
+                ];
             }
         }
 
@@ -362,7 +366,9 @@ function ai_qdrant_are_pages_valid()
 
     } while ($offset !== null);
 
-    return true;
+    return [
+        "success" => true
+    ];
 }
 
 function ai_qdrant_delete_points($ids) {

@@ -89,6 +89,7 @@ function ai_chatbot_admin_panel() {
     $pfp_img_url        = get_option('ba_bot_icon_url');
 
     $status = get_option("ba_payload_update_status", "not_started");
+    $validationResult = ai_qdrant_are_pages_valid();
     ?>
 <script>
     const theme = localStorage.getItem("ba_theme");
@@ -137,7 +138,7 @@ function ai_chatbot_admin_panel() {
             Fix Data Structure!
         </button>
     <?php endif; ?>
-    <?php if ($status === "done" && !ai_qdrant_are_pages_valid()): ?>
+    <?php if ($status === "done" && !$validationResult["success"]): ?>
         <script>
             function removePages() {
                 const btn = document.getElementById("remove_now_button");
@@ -155,6 +156,7 @@ function ai_chatbot_admin_panel() {
                 });
             }
         </script>
+        <p>(Developper message) Post <?=$validationResult["post_id"]?> does not exist, it failed with a fail state of <?=$validationResult["fail_state"]?></p>
         <button id="remove_now_button" class="ba-chatbot-important-btn text-white" style="margin-bottom: 10px; margin-top: 0px !important" onclick="removePages()">
             Remove Outdated Pages!
         </button>
