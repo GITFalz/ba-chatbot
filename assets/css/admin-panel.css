@@ -915,6 +915,30 @@ body {
     height: 50px;
 }
 
+.table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+    display: block;
+}
+
+.bac-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.scroll-body {
+    display: block;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.bac-table thead,
+.bac-table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
 
 @keyframes ba-spin {
     from { transform: rotate(0deg); }

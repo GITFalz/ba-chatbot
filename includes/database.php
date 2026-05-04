@@ -119,17 +119,20 @@ function ai_chatbot_get_pages()
     global $wpdb;
 
     $pages = $wpdb->get_results("
-        SELECT ID, post_title, post_name
+        SELECT ID, post_title, post_name, post_type
         FROM {$wpdb->posts}
-        WHERE post_type = 'page' AND post_status = 'publish'
+        WHERE post_status = 'publish'
+        AND post_type NOT IN ('revision', 'nav_menu_item', 'attachment')
         ORDER BY post_title ASC
     ", ARRAY_A);
 
     $pages_array = [];
+
     foreach ($pages as $page) {
-        $pages_array[ $page['ID'] ] = [
+        $pages_array[$page['ID']] = [
             'title'  => $page['post_title'],
-            'url'    => get_permalink( $page['ID'] ),
+            'url'    => get_permalink($page['ID']),
+            'type'   => $page['post_type'],
             'status' => 0
         ];
     }

@@ -97,15 +97,6 @@ function ai_chatbot_admin_panel() {
         document.body.classList.add("light-theme");
     }
 </script>
-<div>
-    <p>(Developper debug)</p>
-    <?php foreach (ai_chatbot_uploaded_pages() as $page): ?>
-        <div>
-            <h1><?=$page["id"]?></h1>
-            <p><?=$page["page_id"]?></p>
-        </div>
-    <?php endforeach; ?>
-</div>
 <div id="ba-chatbot-admin-panel" class="ba-chatbot-main ba-chatbot-admin-wrap">
     <div class="ba-chatbot-page-header just-between">
         <div class="flex row just-center items-center gap-4">
@@ -165,7 +156,6 @@ function ai_chatbot_admin_panel() {
                 });
             }
         </script>
-        <p>(Developper message) Post <?=$validationResult["post_id"]?> does not exist, it failed with a fail state of <?=$validationResult["fail_state"]?></p>
         <button id="remove_now_button" class="ba-chatbot-important-btn text-white" style="margin-bottom: 10px; margin-top: 0px !important" onclick="removePages()">
             Remove Outdated Pages!
         </button>
@@ -194,7 +184,7 @@ function ai_chatbot_admin_panel() {
                                     <th class="ba-chatbot-col-actions"></th>
                                 </tr>
                             </thead>
-                            <tbody id="fileTableBody">
+                            <tbody id="fileTableBody" class="scroll-body">
                                 <?php foreach ($uploads as $upload) : 
                                     $file_path = get_attached_file($upload->ID);
                                     if (!file_exists($file_path)) {
