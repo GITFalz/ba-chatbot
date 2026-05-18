@@ -597,7 +597,7 @@ Rules for using page content:
         ],
         [
             "role" => "user",
-            "content" => "Here are the pages from our website:\n\n" . $context_text . "\n\nQuestion: " . $question
+            "content" => "Here are the pages from our website:\n\n" . $context_text . "\n\nIMPORTANT: The question below is written in a specific language. You MUST reply in that exact same language, regardless of the language of the pages above.\n\nQuestion: " . $question
         ]
     ];
 
