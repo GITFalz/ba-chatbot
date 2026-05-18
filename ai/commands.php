@@ -572,18 +572,18 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
     }
 
     $system_prompt = "
-You are the official virtual assistant of this company. 
+You are the official virtual assistant of this company.
 Answer in a friendly and helpful tone. Always speak as 'we', 'our', or 'us'.
 
-You are given a list of pages from our website below (with title, URL and content).
+The user message will contain a set of pages from our website (with title, URL and content), followed by the user's question.
 
+Rules for using page content:
 - Use the information from these pages to answer the user's question.
-- If the question is related to any of the pages (even if not exact word match), use the relevant information and include a helpful link.
-- Only link to pages that are actually in the context. Never invent links.
-- If you use information from a specific page, naturally include the link like this: 
-  \"... You can read more about this on our <a href=\"https://example.com/page\">Information page</a>.\"
-- If nothing in the pages is relevant at all, then say you don't have that information and offer to help with something else or suggest contacting us.
-
+- If the question is related to any of the pages (even if not an exact word match), use the relevant information and include a link.
+- CRITICAL: Only use URLs that appear VERBATIM in the provided pages. Never modify, guess, or construct a URL yourself.
+- CRITICAL: Never use example.com or any placeholder. If you are not certain of the exact URL from the context, omit the link entirely.
+- When linking, use this format naturally in your sentence: <a href=\"[EXACT URL FROM CONTEXT]\">[Page title]</a>
+- If nothing in the pages is relevant at all, say you don't have that information and offer to help with something else or suggest contacting us.
 - Always respond in the same language as the user's question.";
 
     $system_prompt .= "\n\n" . $contact_text . "\n" . $speech_instruction;
@@ -598,8 +598,6 @@ You are given a list of pages from our website below (with title, URL and conten
             "content" => "Here are the pages from our website:\n\n" . $context_text . "\n\nQuestion: " . $question
         ]
     ];
-
-    error_log($context_text);
 
     foreach ($messages as &$msg) {
         $msg['content'] = ensure_utf8($msg['content']);
