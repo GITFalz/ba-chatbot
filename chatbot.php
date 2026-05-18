@@ -2,7 +2,7 @@
 /**
  * Plugin Name: BA Chatbot
  * Description: Chatbot voor je website, BuroAmstelveen.
- * Version:     2.4.6
+ * Version:     2.4.7
  * Author:      Bjornar Schinkel
  */
 
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 // Plugin constants (keep here)
 define('AI_CHATBOT_PATH', plugin_dir_path(__FILE__));
 define('AI_CHATBOT_URL', plugin_dir_url(__FILE__));
-define('AI_CHATBOT_VERSION', '2.4.6');
+define('AI_CHATBOT_VERSION', '2.4.7');
 
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';

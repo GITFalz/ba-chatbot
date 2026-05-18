@@ -562,13 +562,10 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
 
     $speech_instruction = "";
     $speech_type = get_option("ba_bot_speech");
-    if ($speech_type == "friendly")
-    {
-        $speech_instruction = "The people asking questions are most likely average people so use; 'je' and 'jouw' instead of 'u' and 'uw' in Dutch for example to appear more friendly.";
-    }
-    else
-    {
-        $speech_instruction = "The people asking questions are most likely elderly so use; 'u' and 'uw' instead of 'je' and 'jouw' in Dutch for example to appear more respectful.";
+    if ($speech_type == "friendly") {
+        $speech_instruction = "Use an informal, friendly tone appropriate for a general audience.";
+    } else {
+        $speech_instruction = "Use a formal, respectful tone appropriate for an elderly audience.";
     }
 
     $system_prompt = "
