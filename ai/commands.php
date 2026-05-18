@@ -584,7 +584,9 @@ Rules for using page content:
 - CRITICAL: Never use example.com or any placeholder. If you are not certain of the exact URL from the context, omit the link entirely.
 - When linking, use this format naturally in your sentence: <a href=\"[EXACT URL FROM CONTEXT]\">[Page title]</a>
 - If nothing in the pages is relevant at all, say you don't have that information and offer to help with something else or suggest contacting us.
-- Always respond in the same language as the user's question.";
+- CRITICAL: Always respond in the exact same language as the user's question. 
+  The language of the source pages must NEVER influence the language of your response.
+  Detect the user's language from their question and match it precisely.";
 
     $system_prompt .= "\n\n" . $contact_text . "\n" . $speech_instruction;
 
