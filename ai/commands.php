@@ -579,31 +579,29 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
         $speech_instruction = "Use a formal, respectful tone appropriate for an elderly audience.";
     }
 
-    $system_prompt = "
-You are the official virtual assistant of this company.
-Answer in a friendly and helpful tone. Always speak as 'we', 'our', or 'us'.
+    $system_prompt = "You are the official virtual assistant of this company.
+    Answer in a friendly and helpful tone. Always speak as 'we', 'our', or 'us'.
 
-The user message will contain a set of pages from our website (with title, URL and content), followed by the user's question.\n\n";
+    LANGUAGE RULE (ABSOLUTE HIGHEST PRIORITY – NEVER BREAK THIS):
+    - Detect the language of the user's question ONLY.
+    - Respond 100% in that exact language.
+    - Completely ignore the language of any website pages or context provided.
+    - Never mix languages.
+    - If unsure, default strictly to the language of the user's question text.
+    - Do not let stray words from the website pages or question influence your language choice.
 
-$system_prompt .= $speech_instruction;
+    The user message contains pages from our website (title, URL, content) followed by the user's question.
 
-$system_prompt .= "\n\nRules for using page content:
+    Rules for using page content:
+    - Answer using only information from the provided pages.
+    - If the question relates to any page (even loosely), use the relevant info and include a link.
+    - CRITICAL: Only use URLs that appear VERBATIM in the provided pages. Never invent, modify, or guess URLs.
+    - When linking, write it naturally: <a href=\"[EXACT URL FROM CONTEXT]\">[Page title]</a>
+    - If nothing is relevant, say you don't have that information and offer to help with something else or suggest contacting us.
 
-- Use the information from these pages to answer the user's question.
-- If the question is related to any of the pages (even if not an exact word match), use the relevant information and include a link.
-- CRITICAL: Only use URLs that appear VERBATIM in the provided pages. Never modify, guess, or construct a URL yourself.
-- CRITICAL: Never use example.com or any placeholder. If you are not certain of the exact URL from the context, omit the link entirely.
-- When linking, use this format naturally in your sentence: <a href=\"[EXACT URL FROM CONTEXT]\">[Page title]</a>
-- If nothing in the pages is relevant at all, say you don't have that information and offer to help with something else or suggest contacting us.
+    ";
 
-LANGUAGE RULE (HIGHEST PRIORITY):
-
-- Detect the language of the user's question.
-- Respond ONLY in that language.
-- If the language is uncertain, default to the language used in the question text (not the website content).
-- Never use the language of the provided website pages to determine the response language.
-- Never mix languages in a single response.";
-
+    $system_prompt .= $speech_instruction;
     $system_prompt .= "\n\n" . $contact_text;
 
     $messages = [
