@@ -617,6 +617,8 @@ LANGUAGE RULE (HIGHEST PRIORITY):
         ]
     ];
 
+    error_log(json_encode($messages));
+
     foreach ($messages as &$msg) {
         $msg['content'] = ensure_utf8($msg['content']);
     }
