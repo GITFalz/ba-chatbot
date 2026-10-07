@@ -120,16 +120,27 @@ function ai_chatbot_send_to_openai_embeddings($chunk) {
     }
 
     $status_code = wp_remote_retrieve_response_code($response);
+    $body        = wp_remote_retrieve_body($response);
+    $data        = json_decode($body, true);
 
     if ($status_code < 200 || $status_code >= 300) {
+        $message = 'HTTP Error: ' . $status_code;
+
+        if (isset($data['error']['message'])) {
+            $message = $data['error']['message'];
+        }
+
+        $retry_after = wp_remote_retrieve_header($response, 'retry-after');
+        if ($retry_after) {
+            $message .= ' (Retry-After: ' . $retry_after . 's)';
+        }
+
         return [
             'success' => false,
-            'message' => 'HTTP Error: ' . $status_code,
+            'message' => $message,
+            'status'  => $status_code,
         ];
     }
-
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
         return [
