@@ -79,7 +79,6 @@ add_shortcode('Chatbot', function() {
         <div id="ai-chatbot-widget-messages">
             <div class="ai-chatbot-message ai-chatbot-bot-message">
                 <strong><?=ucfirst($chatbot_name)?>:</strong> <?=$intro_message?>
-                <button class="ai-chatbot-report-button" type="button">Meld een probleem met dit antwoord</button>
             </div>
         </div>
 
