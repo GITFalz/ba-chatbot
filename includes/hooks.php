@@ -258,7 +258,7 @@ function ai_chatbot_report_handler() {
     }
 
     $report = isset($_POST['report']) ? sanitize_text_field($_POST['report']) : '';
-    $reponse = isset($_POST['reponse']) ? sanitize_text_field($_POST['reponse']) : '';
+    $reponse = isset($_POST['response']) ? sanitize_text_field($_POST['response']) : '';
 
     if (!$report) {
         wp_send_json_error('No report provided.');
@@ -266,7 +266,7 @@ function ai_chatbot_report_handler() {
     }
 
     if (!$reponse) {
-        wp_send_json_error('No reponse provided.');
+        wp_send_json_error('No response provided.');
         wp_die();
     }
 

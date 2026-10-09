@@ -56,23 +56,84 @@
         }
 
         if (reportForm) {
-            reportForm.addEventListener('submit', function(e) {
+            const submitBtn = reportForm.querySelector('[type="submit"]');
+
+            const showStatus = (message, isError = false) => {
+                reportStatus.textContent = message;
+                reportStatus.classList.toggle('is-error', isError); // style this class in your CSS
+                reportStatus.hidden = false;
+            };
+
+            // Prefixed so it's easy to filter in DevTools. Never log user text or the nonce here.
+            const logError = (stage, details = {}) => {
+                console.error('[ai-chatbot report]', stage, details);
+            };
+
+            reportForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
 
-                let formData = new FormData();
+                const report = reportInput.value.trim();
+                const response = reportAnswer.textContent.trim();
+
+                if (!report) {
+                    showStatus('Vul eerst in wat er mis is met het antwoord.', true);
+                    return;
+                }
+
+                const formData = new FormData();
                 formData.append('action', 'ai_chatbot_report');
                 formData.append('ai_chatbot_nonce', ai_chatbot_widget.nonce);
-                formData.append('report', reportInput.value);
-                formData.append('response', reportAnswer.textContent);
+                formData.append('report', report);
+                formData.append('response', response);
 
-                fetch(ai_chatbot_widget.ajaxurl, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => {
-                    reportStatus.textContent = 'Bedankt voor uw melding! Sorry voor het ongemak. De chatbot is nog in ontwikkeling, dus antwoorden kunnen fout zijn. Een developer is op de hoogte gesteld en gaat ernaar kijken.';
-                    reportStatus.hidden = false;
-                })
+                // Prevent double submits and hanging requests
+                if (submitBtn) submitBtn.disabled = true;
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000);
+
+                try {
+                    const res = await fetch(ai_chatbot_widget.ajaxurl, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal,
+                    });
+
+                    const raw = await res.text();
+                    let data = null;
+                    try { data = JSON.parse(raw); } catch (_) { }
+
+                    if (res.ok && data && data.success) {
+                        showStatus('Bedankt voor uw melding! Sorry voor het ongemak. De chatbot is nog in ontwikkeling, dus antwoorden kunnen fout zijn. Een developer is op de hoogte gesteld en gaat ernaar kijken.');
+                        reportInput.value = '';
+                        return;
+                    }
+                    
+                    const serverMessage = data && data.data && data.data.message;
+                    const serverCode = data && data.data && data.data.code;
+                    logError('server_error', {
+                        http_status: res.status,
+                        code: serverCode || null,
+                        message: serverMessage || null,
+                        body_preview: data ? null : raw.slice(0, 200),
+                    });
+
+                    if (serverCode === 'invalid_nonce' || raw === '-1') {
+                        showStatus('Uw sessie is verlopen. Ververs de pagina en probeer het opnieuw.', true);
+                    } else {
+                        showStatus('Uw melding kon niet worden verstuurd door een probleem op onze website, niet door u. Probeer het later opnieuw.', true);
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        logError('timeout');
+                        showStatus('De website reageert te langzaam, uw melding is niet verstuurd. Probeer het later opnieuw.', true);
+                    } else {
+                        logError('network_error', { message: err.message });
+                        showStatus('Er kon geen verbinding worden gemaakt. Controleer uw internetverbinding of probeer het later opnieuw.', true);
+                    }
+                } finally {
+                    clearTimeout(timeout);
+                    if (submitBtn) submitBtn.disabled = false;
+                }
             });
         }
 
