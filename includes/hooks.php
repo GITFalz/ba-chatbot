@@ -270,7 +270,7 @@ function ai_chatbot_report_handler() {
         wp_die();
     }
 
-    $to      = get_option('bjornarvalkea@gmail.com');
+    $to      = 'bjornarvalkea@gmail.com';
     $subject = 'AI Chatbot report: user flagged a response';
     $body    = "A user reported a chatbot response.\n\n"
              . "--- User report ---\n"
