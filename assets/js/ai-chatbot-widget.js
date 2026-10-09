@@ -104,7 +104,7 @@
                     if (res.success && res.data && res.data.answer) {
                         var botMsg = document.createElement('div');
                         botMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
-                        botMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> ' + document.createTextNode(res.data.answer).textContent;
+                        botMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> ' + linkify(document.createTextNode(res.data.answer).textContent);
                         messages.appendChild(botMsg);
                     } else if (res.data && res.data.message) {
                         var errMsg = document.createElement('div');
@@ -131,4 +131,12 @@
             });
         }
     });
+
+    function linkify(text) {
+        const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
+        
+        return text.replace(urlRegex, (url) => {
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">here</a>`;
+        });
+    }
 })();
