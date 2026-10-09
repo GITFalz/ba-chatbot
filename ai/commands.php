@@ -607,7 +607,7 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
 
     ### Links
     - Only use URLs that appear exactly as written in the reference pages. Never invent, modify, or guess a URL.
-    - Format every link as a plain HTTP/HTTPS URL (just the bare link, nothing else).
+    - Convert every URL into an HTML <a> link, using the corresponding page's title as the link text.
     - Include at most 3 links per reply.";
 
     $system_prompt .= $speech_instruction;

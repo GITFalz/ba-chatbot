@@ -133,10 +133,12 @@
     });
 
     function linkify(text) {
+        return text;
+        // maybe used another time
         const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
         
         return text.replace(urlRegex, (url) => {
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">here</a>`;
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
         });
     }
 })();
