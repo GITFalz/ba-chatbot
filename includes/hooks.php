@@ -251,6 +251,11 @@ function ai_chatbot_search_handler() {
 add_action('wp_ajax_nopriv_ai_chatbot_search', 'ai_chatbot_search_handler');
 add_action('wp_ajax_ai_chatbot_search', 'ai_chatbot_search_handler');
 
+
+add_action('wp_mail_failed', function ($error) {
+    error_log('[ai-chatbot] wp_mail_failed: ' . $error->get_error_message());
+});
+
 function ai_chatbot_report_handler() {
     if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) {
         wp_send_json_error(['message' => 'Invalid nonce.']);

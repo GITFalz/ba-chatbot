@@ -60,11 +60,10 @@
 
             const showStatus = (message, isError = false) => {
                 reportStatus.textContent = message;
-                reportStatus.classList.toggle('is-error', isError); // style this class in your CSS
+                reportStatus.classList.toggle('is-error', isError);
                 reportStatus.hidden = false;
             };
 
-            // Prefixed so it's easy to filter in DevTools. Never log user text or the nonce here.
             const logError = (stage, details = {}) => {
                 console.error('[ai-chatbot report]', stage, details);
             };
@@ -107,7 +106,7 @@
                         reportInput.value = '';
                         return;
                     }
-                    
+
                     const serverMessage = data && data.data && data.data.message;
                     const serverCode = data && data.data && data.data.code;
                     logError('server_error', {
