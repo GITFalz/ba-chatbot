@@ -139,16 +139,17 @@
     color: var(--chat-color-text-dark);
 }
 
-.ai-chatbot-report-button {
-    display: block;
-    margin-top: 6px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--chat-color-text-dark);
-    font-size: 12px;
-    text-decoration: underline;
-    cursor: pointer;
+button.ai-chatbot-report-button {
+    all: unset !important;
+    display: block!important;
+    margin-top: 6px!important;
+    padding: 0!important;
+    border: 0!important;
+    background: transparent!important;
+    color: var(--chat-color-text-dark)!important;
+    font-size: 12px!important;
+    text-decoration: underline!important;
+    cursor: pointer!important;
 }
 
 #ai-chatbot-widget-report {
