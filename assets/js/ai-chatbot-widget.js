@@ -133,8 +133,6 @@
     });
 
     function linkify(text) {
-        return text;
-        // maybe used another time
         const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
         
         return text.replace(urlRegex, (url) => {
