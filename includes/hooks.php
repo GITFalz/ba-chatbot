@@ -113,6 +113,7 @@ add_action('wp_enqueue_scripts', function() {
         wp_enqueue_style('ai-chatbot-widget-css', AI_CHATBOT_URL . 'assets/css/ai-chatbot-widget.css');
         wp_enqueue_script('ai-chatbot-widget-js', AI_CHATBOT_URL . 'assets/js/ai-chatbot-widget.js', [], time(), true);
         wp_localize_script('ai-chatbot-widget-js', 'ai_chatbot_widget', [
+            'nonce' => wp_create_nonce('ai_chatbot_handler'),
             'ajaxurl' => admin_url('admin-ajax.php'),
             'speech' => (get_option("ba_bot_speech") == "friendly") ? "friendly" : "respectful",
             'botName' => get_option('ba_bot_name', "Assistent")
@@ -200,6 +201,11 @@ function get_relevant_pages_for_chatbot($question, $max_pages = 40, $chars_per_p
 
 
 function ai_chatbot_search_handler() {
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+
     $question = isset($_POST['question']) ? sanitize_text_field($_POST['question']) : '';
     if (!$question) {
         wp_send_json_error('No question provided.');
@@ -244,6 +250,46 @@ function ai_chatbot_search_handler() {
 }
 add_action('wp_ajax_nopriv_ai_chatbot_search', 'ai_chatbot_search_handler');
 add_action('wp_ajax_ai_chatbot_search', 'ai_chatbot_search_handler');
+
+function ai_chatbot_report_handler() {
+    if (!isset($_POST['ai_chatbot_nonce']) || !wp_verify_nonce($_POST['ai_chatbot_nonce'], 'ai_chatbot_handler')) {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+        wp_die();
+    }
+
+    $report = isset($_POST['report']) ? sanitize_text_field($_POST['report']) : '';
+    $reponse = isset($_POST['reponse']) ? sanitize_text_field($_POST['reponse']) : '';
+
+    if (!$report) {
+        wp_send_json_error('No report provided.');
+        wp_die();
+    }
+
+    if (!$reponse) {
+        wp_send_json_error('No reponse provided.');
+        wp_die();
+    }
+
+    $to      = get_option('bjornarvalkea@gmail.com');
+    $subject = 'AI Chatbot report: user flagged a response';
+    $body    = "A user reported a chatbot response.\n\n"
+             . "--- User report ---\n"
+             . $report . "\n\n"
+             . "--- Chatbot response ---\n"
+             . $reponse . "\n\n"
+             . "Sent: " . current_time('mysql') . "\n";
+    $headers = ['Content-Type: text/plain; charset=UTF-8'];
+
+    $sent = wp_mail($to, $subject, $body, $headers);
+
+    if ($sent) {
+        wp_send_json_success(['message' => 'Report sent.']);
+    } else {
+        wp_send_json_error(['message' => 'Could not send email.']);
+    }
+}
+add_action('wp_ajax_nopriv_ai_chatbot_report', 'ai_chatbot_report_handler');
+add_action('wp_ajax_ai_chatbot_report', 'ai_chatbot_report_handler');
 
 function ai_chatbot_file_deletion_handler() 
 {

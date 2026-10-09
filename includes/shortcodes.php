@@ -79,8 +79,21 @@ add_shortcode('Chatbot', function() {
         <div id="ai-chatbot-widget-messages">
             <div class="ai-chatbot-message ai-chatbot-bot-message">
                 <strong><?=ucfirst($chatbot_name)?>:</strong> <?=$intro_message?>
+                <button class="ai-chatbot-report-button" type="button">Meld een probleem met dit antwoord</button>
             </div>
         </div>
+
+        <section id="ai-chatbot-widget-report" aria-label="Probleem met antwoord melden" hidden>
+            <button id="ai-chatbot-widget-report-back" type="button">← Terug naar het gesprek</button>
+            <p>Waar ging dit antwoord mis?</p>
+            <blockquote id="ai-chatbot-widget-report-answer"></blockquote>
+            <form id="ai-chatbot-widget-report-form">
+                <label for="ai-chatbot-widget-report-input">Vertel ons wat er niet goed was</label>
+                <textarea id="ai-chatbot-widget-report-input" rows="5" required></textarea>
+                <button type="submit">Verstuur melding</button>
+                <p id="ai-chatbot-widget-report-status" role="status" aria-live="polite" hidden></p>
+            </form>
+        </section>
 
         <form id="ai-chatbot-widget-form" autocomplete="off">
             <input id="ai-chatbot-widget-input" type="text" placeholder="Typ <?=(get_option('ba_bot_speech') == 'friendly') ? 'jouw' : 'uw'?> vraag..." required />

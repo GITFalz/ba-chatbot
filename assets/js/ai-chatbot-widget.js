@@ -4,12 +4,77 @@
         if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
     }
 
+    function addReportButton(message) {
+        var reportButton = document.createElement('button');
+        reportButton.className = 'ai-chatbot-report-button';
+        reportButton.type = 'button';
+        reportButton.textContent = 'Meld een probleem met dit antwoord';
+        message.appendChild(reportButton);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var btnContent = document.getElementById('ai-chatbot-widget-button-content');
         var btn = document.getElementById('ai-chatbot-widget-button');
         var msg = document.getElementById('ai-chatbot-widget-button-message');
         var win = document.getElementById('ai-chatbot-widget-window');
         var cls = document.getElementById('ai-chatbot-widget-header-close');
+        var messages = document.getElementById('ai-chatbot-widget-messages');
+        var form = document.getElementById('ai-chatbot-widget-form');
+        var report = document.getElementById('ai-chatbot-widget-report');
+        var reportForm = document.getElementById('ai-chatbot-widget-report-form');
+        var reportInput = document.getElementById('ai-chatbot-widget-report-input');
+        var reportAnswer = document.getElementById('ai-chatbot-widget-report-answer');
+        var reportStatus = document.getElementById('ai-chatbot-widget-report-status');
+
+        function closeReport() {
+            report.hidden = true;
+            messages.hidden = false;
+            form.hidden = false;
+            reportStatus.hidden = true;
+        }
+
+        if (messages && report && form) {
+            messages.addEventListener('click', function(e) {
+                var button = e.target.closest('.ai-chatbot-report-button');
+                if (!button) return;
+
+                var answer = button.closest('.ai-chatbot-bot-message').cloneNode(true);
+                answer.querySelector('.ai-chatbot-report-button').remove();
+                reportAnswer.textContent = answer.textContent.trim();
+                reportInput.value = '';
+                messages.hidden = true;
+                form.hidden = true;
+                report.hidden = false;
+                reportStatus.hidden = true;
+                reportInput.focus();
+            });
+        }
+
+        var reportBack = document.getElementById('ai-chatbot-widget-report-back');
+        if (reportBack) {
+            reportBack.addEventListener('click', closeReport);
+        }
+
+        if (reportForm) {
+            reportForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                let formData = new FormData();
+                formData.append('action', 'ai_chatbot_report');
+                formData.append('ai_chatbot_nonce', ai_chatbot_widget.nonce);
+                formData.append('report', reportInput.value);
+                formData.append('response', reportAnswer.textContent);
+
+                fetch(ai_chatbot_widget.ajaxurl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => {
+                    reportStatus.textContent = 'Bedankt voor uw melding! Sorry voor het ongemak. De chatbot is nog in ontwikkeling, dus antwoorden kunnen fout zijn. Een developer is op de hoogte gesteld en gaat ernaar kijken.';
+                    reportStatus.hidden = false;
+                })
+            });
+        }
 
         function open()
         {
@@ -61,7 +126,6 @@
             });
         }
 
-        var form = document.getElementById('ai-chatbot-widget-form');
         if (form) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -91,6 +155,7 @@
 
                 let formData = new FormData();
                 formData.append('action', 'ai_chatbot_search');
+                formData.append('ai_chatbot_nonce', ai_chatbot_widget.nonce);
                 formData.append('question', msg);
 
                 fetch(ai_chatbot_widget.ajaxurl, {
@@ -105,16 +170,19 @@
                         var botMsg = document.createElement('div');
                         botMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
                         botMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> ' + linkify(document.createTextNode(res.data.answer).textContent);
+                        addReportButton(botMsg);
                         messages.appendChild(botMsg);
                     } else if (res.data && res.data.message) {
                         var errMsg = document.createElement('div');
                         errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
                         errMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> ' + res.data.message;
+                        addReportButton(errMsg);
                         messages.appendChild(errMsg);
                     } else {
                         var errMsg = document.createElement('div');
                         errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
                         errMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> Geen antwoord gevonden.';
+                        addReportButton(errMsg);
                         messages.appendChild(errMsg);
                     }
 
@@ -125,6 +193,7 @@
                     var errMsg = document.createElement('div');
                     errMsg.className = 'ai-chatbot-message ai-chatbot-bot-message';
                     errMsg.innerHTML = '<strong>' + ai_chatbot_widget.botName + ':</strong> Serverfout.';
+                    addReportButton(errMsg);
                     messages.appendChild(errMsg);
                     scrollMessagesToBottom();
                 });
