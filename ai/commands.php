@@ -609,8 +609,6 @@ function ai_chatbot_ask_llm($question, $context_chunks) {
     - Only use URLs that appear exactly as written in the reference pages. Never invent, modify, or guess a URL.
     - Format every link as an HTML anchor tag, never as markdown.
     Correct:   <a href=\"https://example.com/about\">About Us</a>
-    Incorrect: [About Us](https://example.com/about)
-    Incorrect: https://example.com/about
     - Use the page title as the link text,   \"here\" or \"click here\".
     - Include at most 3 links per reply.";
 
